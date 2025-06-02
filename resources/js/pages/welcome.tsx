@@ -62,10 +62,10 @@ export default function Welcome() {
 
                 {/* Section Treatment */}
                 <div className="flex flex-col w-full justify-center items-center mb-[2rem]">
-                    <h1 className="text-4xl font-bold text-center mb-3">
+                    <h1 className="text-4xl font-bold text-center mb-3 dark:text-white">
                         Our Treatment
                     </h1>
-                    <p className="text-center w-[30rem]">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iusto fuga laborum eaque architecto. Debitis dolore, veritatis dicta tenetur quo velit.</p>
+                    <p className="text-center w-[30rem] dark:text-white">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iusto fuga laborum eaque architecto. Debitis dolore, veritatis dicta tenetur quo velit.</p>
                 </div>
 
                 <div className="flex flex-row flex-wrap gap-3 justify-center items-center">

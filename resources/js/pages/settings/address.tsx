@@ -30,12 +30,12 @@ export default function Address() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Pengaturan alamat" />
             <SettingsLayout>
-                <div className="flex flex-row gap-3 w-full">
+                <div className="flex flex-col-reverse md:flex-row lg:flex-row gap-3 w-full">
                     <div className="flex flex-col space-y-3 w-full">
                         <HeadingSmall title="Pengaturan alamat" description="Perbarui pengaturan alamat akun Anda" />
-                        <div className="w-full h-[30rem]">
+                        <div className="w-full rounded-xl h-[30rem]">
                             <GoogleMap
-                                mapContainerStyle={{ width: "100%", height: "100%" }}
+                                mapContainerStyle={{ width: "100%", height: "100%", borderRadius: "1rem" }}
                                 center={selectedLocation || { lat: -6.200000, lng: 106.816666 }}
                                 zoom={15}>
                                 {selectedLocation && <Marker position={selectedLocation} />}
@@ -53,7 +53,7 @@ export default function Address() {
                                     <CardAction>
                                         <Button variant={'outline'} onClick={() => {
                                             setSelectedLocation({ lat: +a.lat, lng: +a.long });
-                                        }}>
+                                        }} className="bg-red-500 hover:bg-red-600">
                                             <i className="fa-solid fa-location-dot"></i>
                                         </Button>
                                     </CardAction>
@@ -68,7 +68,7 @@ export default function Address() {
                             </Card>
                         ))}
                         <Link href="/settings/address/create">
-                            <Button variant={`outline`} className="bg-green-500 hover:bg-green-600 text-white hover:text-white">
+                            <Button variant={`outline`} className="bg-green-500 hover:bg-green-600 text-white hover:text-white w-full">
                                 <i className="fa-solid fa-plus"></i>
                             </Button>
                         </Link>

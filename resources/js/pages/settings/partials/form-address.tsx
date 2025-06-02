@@ -1,7 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useLoadScript, GoogleMap, Marker, Autocomplete, useJsApiLoader } from "@react-google-maps/api";
+import { useRef } from "react";
+import { useLoadScript, GoogleMap, Marker, useJsApiLoader, Autocomplete as GoogleAutocomplete } from "@react-google-maps/api";
 import {
     Form,
     FormControl,
@@ -20,7 +21,7 @@ import { toast } from "sonner";
 import { SharedData, UserAddress } from "@/types";
 import { usePage } from "@inertiajs/react";
 import { Textarea } from "@/components/ui/textarea";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Label } from "@/components/ui/label";
 
 const FormCreateAddress = ({
@@ -44,55 +45,70 @@ const FormCreateAddress = ({
     };
 
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
-    const [txtAddress, setTxtAddress] = useState<string>("");
 
     // Google Maps API loading
-    const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, // API key from env
-        libraries: ["places"], // If you want to use Places API for search
-    });
-
-    // Google Maps API loading
-    // const { isLoaded } = useLoadScript({
-    //     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-    //     libraries: ["places"],
+    // const { isLoaded } = useJsApiLoader({
+    //     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, // API key from env
+    //     libraries: ["places"], // If you want to use Places API for search
     // });
+
+    // Google Maps API loading
+    const { isLoaded } = useLoadScript({
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+        libraries: ["places"],
+    });
 
     const addressForm = useForm<AddressFormValue>({
         resolver: zodResolver(createAddressSchema),
         defaultValues: defaultValueMenuForm
     });
 
-    const handlePlaceChange = useCallback(
-        (event: google.maps.places.PlaceResult | null) => {
-            if (event && event.geometry) {
-                const { lat, lng } = event.geometry.location;
-                setSelectedLocation({ lat: lat(), lng: lng() });
-                addressForm.setValue('lat', lat())
-                addressForm.setValue('long', lng())
-                setTxtAddress(event.formatted_address || "");
-            }
-        },
-        [addressForm]
-    );
+    // Tambahkan dalam komponen:
+    const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
-    const handleLocationClick = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const { latitude, longitude } = position.coords;
+    const handlePlaceChanged = () => {
+        if (autocompleteRef.current !== null) {
+            const place = autocompleteRef.current.getPlace();
+            if (place.geometry) {
+                const { lat, lng } = place.geometry.location!;
+                const latitude = lat();
+                const longitude = lng();
+
                 setSelectedLocation({ lat: latitude, lng: longitude });
-                addressForm.setValue('lat', latitude.toString())
-                addressForm.setValue('long', longitude.toString())
-                setTxtAddress("Current Location");
-            });
+                addressForm.setValue('lat', latitude.toString());
+                addressForm.setValue('long', longitude.toString());
+                addressForm.setValue('address', place.formatted_address ?? "");
+            }
         }
     };
 
-    useEffect(() => {
-        if (txtAddress != "") {
-            addressForm.setValue('address', txtAddress);
+    const handleLocationClick = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+
+                setSelectedLocation({ lat: latitude, lng: longitude });
+                addressForm.setValue('lat', latitude.toString());
+                addressForm.setValue('long', longitude.toString());
+
+                try {
+                    const geocoder = new window.google.maps.Geocoder();
+                    geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+                        if (status === "OK" && results && results.length > 0) {
+                            const formattedAddress = results[0].formatted_address;
+                            addressForm.setValue('address', formattedAddress);
+                        } else {
+                            console.error("Geocoder failed due to: " + status);
+                            addressForm.setValue('address', "Alamat tidak ditemukan");
+                        }
+                    });
+                } catch (error) {
+                    console.error("Reverse geocoding error:", error);
+                    addressForm.setValue('address', "Alamat tidak ditemukan");
+                }
+            });
         }
-    }, [txtAddress])
+    };
 
     // 2. Define a submit handler.
     const onSubmit = async (data: AddressFormValue) => {
@@ -170,9 +186,13 @@ const FormCreateAddress = ({
                 <div className="space-y-2 w-full">
                     <Label>Cari Alamat</Label>
                     <div className="flex flex-row justify-stretch gap-2">
-                        <Autocomplete onPlaceChanged={() => handlePlaceChange} className="w-full">
+                        <GoogleAutocomplete
+                            onLoad={(ref) => (autocompleteRef.current = ref)}
+                            onPlaceChanged={handlePlaceChanged}
+                            className="w-full"
+                        >
                             <Input type="text" className="w-full" placeholder="Search for an address" />
-                        </Autocomplete>
+                        </GoogleAutocomplete>
                         {/* Button to get Current Location */}
                         <Button type="button" onClick={handleLocationClick} disabled={readMode}>
                             <i className="fa-solid fa-crosshairs"></i>

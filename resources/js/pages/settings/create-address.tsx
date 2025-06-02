@@ -22,7 +22,7 @@ export default function CreateAddress() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Pengaturan alamat" />
             <SettingsLayout>
-                <div className="space-y-6 w-1/2">
+                <div className="space-y-6 md:w-1/2 lg:w-1/2">
                     <HeadingSmall title="Pengaturan alamat" description="Perbarui pengaturan alamat akun Anda" />
                     {/* Daftar alamat */}
                     <div className="w-full">
