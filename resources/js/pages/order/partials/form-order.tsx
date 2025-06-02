@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLoadScript, GoogleMap, Marker, Autocomplete, useJsApiLoader } from "@react-google-maps/api";
+import { useLoadScript, GoogleMap, Marker, Autocomplete as GoogleAutocomplete, useJsApiLoader } from "@react-google-maps/api";
 import { useCallback, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -45,27 +45,49 @@ const FormOrder = ({
         resolver: zodResolver(schemaOrder),
     });
 
-    const handlePlaceChange = useCallback(
-        (event: google.maps.places.PlaceResult | null) => {
-            if (event && event.geometry) {
-                const { lat, lng } = event.geometry.location;
-                setSelectedLocation({ lat: lat(), lng: lng() });
-                formOrder.setValue('custom_lat', lat())
-                formOrder.setValue('custom_long', lng())
-                formOrder.setValue('custom_address', event.formatted_address || "");
+    // Tambahkan dalam komponen:
+    const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+    const handlePlaceChanged = () => {
+        if (autocompleteRef.current !== null) {
+            const place = autocompleteRef.current.getPlace();
+            if (place.geometry) {
+                const { lat, lng } = place.geometry.location!;
+                const latitude = lat();
+                const longitude = lng();
+
+                setSelectedLocation({ lat: latitude, lng: longitude });
+                formOrder.setValue('custom_lat', latitude.toString());
+                formOrder.setValue('custom_long', longitude.toString());
+                formOrder.setValue('custom_address', place.formatted_address ?? "");
             }
-        },
-        [formOrder]
-    );
+        }
+    };
 
     const handleLocationClick = () => {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
+            navigator.geolocation.getCurrentPosition(async (position) => {
                 const { latitude, longitude } = position.coords;
+
                 setSelectedLocation({ lat: latitude, lng: longitude });
-                formOrder.setValue('custom_lat', latitude.toString())
-                formOrder.setValue('custom_long', longitude.toString())
-                formOrder.setValue('custom_address', "Current User Location")
+                formOrder.setValue('custom_lat', latitude.toString());
+                formOrder.setValue('custom_long', longitude.toString());
+
+                try {
+                    const geocoder = new window.google.maps.Geocoder();
+                    geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+                        if (status === "OK" && results && results.length > 0) {
+                            const formattedAddress = results[0].formatted_address;
+                            formOrder.setValue('custom_address', formattedAddress);
+                        } else {
+                            console.error("Geocoder failed due to: " + status);
+                            formOrder.setValue('custom_address', "Alamat tidak ditemukan");
+                        }
+                    });
+                } catch (error) {
+                    console.error("Reverse geocoding error:", error);
+                    formOrder.setValue('custom_address', "Alamat tidak ditemukan");
+                }
             });
         }
     };
@@ -215,9 +237,13 @@ const FormOrder = ({
                                     <div className="space-y-2 w-full">
                                         <Label>Cari Alamat</Label>
                                         <div className="flex flex-row justify-stretch gap-2">
-                                            <Autocomplete onPlaceChanged={() => handlePlaceChange} className="w-full">
+                                            <GoogleAutocomplete
+                                                onLoad={(ref) => (autocompleteRef.current = ref)}
+                                                onPlaceChanged={handlePlaceChanged}
+                                                className="w-full"
+                                            >
                                                 <Input type="text" className="w-full" placeholder="Search for an address" />
-                                            </Autocomplete>
+                                            </GoogleAutocomplete>
                                             {/* Button to get Current Location */}
                                             <Button type="button" onClick={handleLocationClick} disabled={readMode}>
                                                 <i className="fa-solid fa-crosshairs"></i>
