@@ -21,7 +21,7 @@ const PageCreateOrder = ({
             href: '/order/list',
         },
         {
-            title: 'Order',
+            title: 'Buat Order',
             href: '/order/create',
         }
     ];

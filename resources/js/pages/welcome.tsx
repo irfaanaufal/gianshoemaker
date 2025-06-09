@@ -25,7 +25,7 @@ export default function Welcome() {
     }, []);
 
     return (
-        <>
+        <div className="relative p-3">
             <Head title="Welcome">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
@@ -72,8 +72,12 @@ export default function Welcome() {
                     <TreatmentCard data={treatments} className="w-[15rem] p-3" />
                 </div>
 
-                <div className="hidden h-14.5 lg:block"></div>
             </div>
-        </>
+            <div className="flex sticky bottom-10 right-10 float-end w-[7rem] h-[7rem] bg-slate-300 rounded-full justify-center items-center">
+                <Link href={route('openai')}>
+                    <img src="/assets/logo-gpt.png" alt="Logo Chat GPT" className="w-[7rem] h-[7rem] object-cover" />
+                </Link>
+            </div>
+        </div>
     );
 }

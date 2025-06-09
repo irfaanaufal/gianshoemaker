@@ -16,8 +16,11 @@ class Treatment extends Model
         'slug',
         'price',
         'description',
-        'picture'
+        'picture',
+        'analyze',
+        'is_yellow'
     ];
+
 
     public function order_details(): HasMany
     {

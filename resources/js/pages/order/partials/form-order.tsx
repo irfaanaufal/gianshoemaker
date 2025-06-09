@@ -1,4 +1,4 @@
-import { Order, ShoeType, Treatment, User, UserAddress } from "@/types";
+import { Order, OrderDetail, ShoeType, Treatment, User, UserAddress } from "@/types";
 import { z } from "zod";
 import { schemaOrder } from "./validation";
 import { useForm } from "react-hook-form";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { api } from "../../../lib/utils";
 
 const FormOrder = ({
     editMode,
@@ -32,13 +33,14 @@ const FormOrder = ({
     const [existAddress, setExistAddress] = useState<boolean>(false);
     const [userSelectedAddress, setUserSelectedAddress] = useState<UserAddress[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [orderDetail, setOrderDetail] = useState<OrderDetail[]>([]);
+    const [totalPrice, setTotalPrice] = useState<number>(0);
     const currentInputFile = useRef<HTMLInputElement>(null);
     // Google Maps API loading
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, // API key from env
         libraries: ["places"], // If you want to use Places API for search
     });
-
 
     type FormOrderValue = z.infer<typeof schemaOrder>;
     const formOrder = useForm<FormOrderValue>({
@@ -92,9 +94,47 @@ const FormOrder = ({
         }
     };
 
-    const onSubmit = (data: FormOrderValue) => {
-        console.log(data);
+    const onSubmit = async (data: FormOrderValue) => {
+        try {
+            const newData = {...data, order_details: orderDetail, total_price: totalPrice};
+        const response = await api.post(route(''))
+            if (response.status === 200) {
+                window.snap.pay(response.data.token, {
+                    onSuccess: (res) => {
+                    /* You may add your own implementation here */
+                    console.log(res)
+                    },
+                    onPending: function (res) {
+                    /* You may add your own implementation here */
+                    console.log(res)
+                    },
+                    onError: function (res) {
+                    /* You may add your own implementation here */
+                    console.log(res)
+                    },
+                    onClose: function () {
+                    /* You may add your own implementation here */
+                    }
+                })
+            }
+        } catch (error) {
+            console.log(error);
+        }
     }
+
+    const handleAddButton = async () => {
+        const newOrderDetail = {
+            treatment_id: formOrder.getValues("treatment_id"),
+            picture_before: URL.createObjectURL(formOrder.getValues("picture_before")),
+            shoe_name: formOrder.getValues("shoe_name"),
+            shoe_type_id: formOrder.getValues("shoe_type_id")
+        };
+        setOrderDetail(prev => [...prev, newOrderDetail]);
+        const t = treatment_options.find((to) => +newOrderDetail.treatment_id == to.id);
+        const newPrice = +t?.price + totalPrice;
+        setTotalPrice(newPrice);
+        // currentInputFile.current!.value = "";
+    };
 
     if (!isLoaded) return <div>Loading...</div>;
     return (
@@ -282,11 +322,11 @@ const FormOrder = ({
                         <FormField
                             control={formOrder.control}
                             name="shoe_type_id"
-                            render={({ field: { value, ...fieldProps } }) => (
+                            render={({ field: { value, onChange, ...fieldProps } }) => (
                                 <FormItem>
                                     <FormLabel>Jenis Sepatu</FormLabel>
                                     <FormControl>
-                                        <Select defaultValue={value} {...fieldProps}>
+                                        <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Jenis sepatu yang dipilih" />
                                             </SelectTrigger>
@@ -304,11 +344,11 @@ const FormOrder = ({
                         <FormField
                             control={formOrder.control}
                             name="treatment_id"
-                            render={({ field: { value, ...fieldProps } }) => (
+                            render={({ field: { value, onChange, ...fieldProps } }) => (
                                 <FormItem>
                                     <FormLabel>Treatment yang dipilih</FormLabel>
                                     <FormControl>
-                                        <Select defaultValue={value} {...fieldProps}>
+                                        <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Treatment yang dipilih" />
                                             </SelectTrigger>
@@ -339,21 +379,41 @@ const FormOrder = ({
                                 </FormItem>
                             )}
                         />
-                        <div className="flex flex-col mt-4 p-3">
+                        <Button variant={'outline'} className="bg-green-500 hover:bg-green-600 text-white hover:text-white" type="button" onClick={handleAddButton}>
+                            Tambahkan
+                        </Button>
+                        <div className="flex flex-col mt-4 p-3 space-y-3">
                             <h2 className="text-xl font-bold">List Order</h2>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Card Title</CardTitle>
-                                    <CardDescription>Card Description</CardDescription>
-                                    <CardAction>Card Action</CardAction>
-                                </CardHeader>
-                                <CardContent>
-                                    <p>Card Content</p>
-                                </CardContent>
-                                <CardFooter>
-                                    <p>Card Footer</p>
-                                </CardFooter>
-                            </Card>
+                            {orderDetail.length > 0 ?
+                                orderDetail.map((od) =>
+                                (
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Nama Sepatu : {od.shoe_name}</CardTitle>
+                                            <CardAction>
+                                                <Button variant={'outline'} className="bg-red-500 hover:bg-red-600 text-white hover:text-white">
+                                                    <i className="fa-solid fa-trash"></i>
+                                                </Button>
+                                            </CardAction>
+                                        </CardHeader>
+                                        <CardContent className="flex flex-col">
+                                            <span>Jenis Sepatu : {shoe_type_options.find((st => +od.shoe_type_id == st.id))?.name}</span>
+                                            <span>Treatment yang dipilih : {treatment_options.find((t => +od.treatment_id == t.id))?.name}</span>
+                                            <span>Harga : Rp. {Intl.NumberFormat('id-ID').format(treatment_options.find((t => +od.treatment_id == t.id))?.price)}</span>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                                :
+                                <p>Tidak ada order...</p>
+                            }
+                            {orderDetail.length > 0 &&
+                            <>
+                                <span>Total Harga : Rp. {Intl.NumberFormat('id-ID').format(totalPrice)}</span>
+                                <Button variant={'outline'} className="bg-green-500 hover:bg-green-600 text-white hover:text-white">
+                                    Checkout Sekarang!
+                                </Button>
+                            </>
+                            }
                         </div>
                     </div>
                 </div>

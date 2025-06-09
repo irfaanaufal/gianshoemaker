@@ -11,26 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('treatments', function (Blueprint $table) {
+        Schema::create('log_analysts', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('slug');
-            $table->string('picture');
-            $table->double('price');
-            $table->float('analyze')->nullable(); // Diisi dengan 0.1 untuk 10% atau 0.5 untuk 50%
-            $table->boolean('is_yellow')->nullable();
-            $table->text('description');
+            $table->string('dirtiness_level')->nullable();
+            $table->boolean('is_yellowing')->default(false);
+            $table->string('recommended_treatment_slug')->nullable();
+            $table->text('reason')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
-
     }
+
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('treatments');
+        Schema::dropIfExists('log_analysts');
     }
 };

@@ -7,13 +7,21 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Http\Requests\Order\StoreRequest as OrderStore;
 use App\Http\Requests\Order\UpdateRequest as OrderUpdate;
+use App\Http\Services\MidtransService;
 use App\Models\ShoeType;
 use App\Models\Treatment;
 use App\Models\User;
+use App\Models\UserAddress;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
+    protected $midtransService;
+
+    public function __construct(MidtransService $midtransService)
+    {
+        $this->midtransService = $midtransService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -47,14 +55,25 @@ class OrderController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(OrderStore $request)
+    public function store(Request $request)
     {
-        DB::transaction(function() use($request) {
-            //
-        });
+        $generatedTrx = "TRX" . time() . date('Y') * date('m') * date('d') + time();
+        $user = User::find($request->user_id);
+        $address = UserAddress::find($request->user_address_id);
+        $data = [
+            'order_id' => $generatedTrx,
+            'gross_amount' => $request->total_price,
+            'first_name' => $user ?  $user->name : $request->custom_user,
+            'address' => $address ? $address->address : $request->custom_address,
+            'email' => $user ?  $user->email : "",
+            'treatment_id' => "Treatment Sepatu",
+            'treatment' => "Treatment Sepatu",
+        ];
+        // Panggil fungsi createOrder dari service Midtrans
+        $token = $this->midtransService->create_order($data);
+
+        // Kirim token ke frontend
+        return response()->json(['token' => $token, 'order' => $data], 200);
     }
 
     /**

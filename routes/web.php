@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\MenuAPIController;
+use App\Http\Controllers\LogAnalystController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\OrderController;
@@ -13,6 +14,14 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
+
+Route::get('/chatbot', function() {
+    return Inertia::render('openai');
+})->name('openai');
+
+Route::controller(LogAnalystController::class)->group(function() {
+    Route::post('/chatbot/treatment/recomendation', 'analyze')->name('openai.treatment.analyze');
+});
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
