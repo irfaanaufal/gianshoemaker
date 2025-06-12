@@ -61,19 +61,56 @@ class OrderController extends Controller
         $user = User::find($request->user_id);
         $address = UserAddress::find($request->user_address_id);
         $data = [
-            'order_id' => $generatedTrx,
-            'gross_amount' => $request->total_price,
-            'first_name' => $user ?  $user->name : $request->custom_user,
-            'address' => $address ? $address->address : $request->custom_address,
-            'email' => $user ?  $user->email : "",
-            'treatment_id' => "Treatment Sepatu",
-            'treatment' => "Treatment Sepatu",
+            "order_id" => $generatedTrx,
+            "gross_amount" => $request->total_price,
+            "first_name" => $user ?  $user->name : $request->custom_user,
+            "address" => $address ? $address->address : $request->custom_address,
+            "email" => $user ?  $user->email : "",
+            "order_details" => $request->order_details,
+        ];
+        $addon_data = [
+            "user_id" => $user->id,
+            "user_address_id" => $address->id,
+            "custom_user" => $request->custom_user ?? null,
+            "custom_lat" => $request->custom_lat ?? null,
+            "custom_long" => $request->custom_long ?? null,
         ];
         // Panggil fungsi createOrder dari service Midtrans
         $token = $this->midtransService->create_order($data);
 
+        $newOrderDetails = [];
+        foreach ($request->order_details as $ods) {
+            array_push($newOrderDetails, (object)[
+                "treatment_id" => $ods["treatment_id"] ?? $ods->treatment_id,
+                "shoe_type_id" => $ods["shoe_type_id"] ?? $ods->shoe_type_id,
+                "shoe_name" => $ods["shoe_name"] ?? $ods->shoe_name,
+                "recent_price" => (int)$ods["recent_price"] ?? (int)$ods->recent_price,
+            ]);
+        }
+
         // Kirim token ke frontend
-        return response()->json(['token' => $token, 'order' => $data], 200);
+        return response()->json(['token' => $token, 'order' => $data, "addon_order" => $addon_data, "order_details" => $newOrderDetails], 200);
+    }
+
+    public function callback(Request $request)
+    {
+        $trx = Order::create([
+            "trx" => $request->order["order_id"],
+            "user_id" => $request->addon_order["user_id"] ?? null,
+            "user_address_id" => $request->addon_order["user_address_id"] ?? null,
+            "address" => $request->order["address"] ?? null,
+            "custom_user" => $request->addon_order["custom_user"] ?? null,
+            "custom_lat" => $request->addon_order["custom_lat"] ?? null,
+            "custom_long" => $request->addon_order["custom_long"] ?? null,
+            "payment_status" => "paid",
+            "grand_total" => $request->order["gross_amount"] ?? 0
+        ]);
+        foreach ($request->order_details as $od) {
+            $trx->order_details()->create($od);
+        }
+        return response()->json([
+            "message" => "Berhasil membuat order baru!"
+        ], 200);
     }
 
     /**

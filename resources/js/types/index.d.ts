@@ -109,4 +109,5 @@ export interface OrderDetail {
     picture_after?: string;
     shoe_name: string;
     recent_price?: number;
+    [key: string]: unknown;
 }

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->string('trx')->nullable();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('user_address_id')->constrained();
+            $table->foreignId('user_id')->nullable()->constrained();
+            $table->foreignId('user_address_id')->nullable()->constrained();
             $table->string('custom_user')->nullable(); // Diisi apabila user yang order barang tidak memiliki akun atau yang datang langsung ke outlet
             $table->string('custom_phone')->nullable();
             $table->text('custom_address')->nullable();

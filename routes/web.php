@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function() {
     Route::get('/order/list', [OrderController::class, 'dashboard'])->name('order.index');
     Route::get('/order/placement', [OrderController::class, 'index'])->name('order.placement');
     Route::post('/order/placement', [MidtransController::class, 'create_order'])->name('order.placement.store');
+    Route::post('/order/callback', [OrderController::class, 'callback'])->name('order.callback');
 
     // Dynamic Route
     Route::resource('menu', MenuController::class)->except('index');

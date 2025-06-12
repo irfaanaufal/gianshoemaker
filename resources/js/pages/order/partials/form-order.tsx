@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { api } from "../../../lib/utils";
+import { api } from "@/lib/utils";
+import { toast } from "sonner";
 
 const FormOrder = ({
     editMode,
@@ -96,24 +97,36 @@ const FormOrder = ({
 
     const onSubmit = async (data: FormOrderValue) => {
         try {
-            const newData = {...data, order_details: orderDetail, total_price: totalPrice};
-        const response = await api.post(route(''))
+            const newData = { ...data, order_details: orderDetail, total_price: totalPrice };
+            const response = await api.post(route('order.store'), newData, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
             if (response.status === 200) {
                 window.snap.pay(response.data.token, {
-                    onSuccess: (res) => {
-                    /* You may add your own implementation here */
-                    console.log(res)
+                    onSuccess: async (res) => {
+                        /* You may add your own implementation here */
+                        console.log(res)
+                        const nData = { order: response.data.order, addon_order: response.data.addon_order, order_details: response.data.order_details };
+                        const res1 = await api.post(route('order.callback'), nData);
+                        if (res1.status == 200) {
+                            toast(res1.data.message);
+                            setTimeout(() => {
+                                window.location.href = route('order.index');
+                            }, 3000);
+                        }
                     },
                     onPending: function (res) {
-                    /* You may add your own implementation here */
-                    console.log(res)
+                        /* You may add your own implementation here */
+                        console.log(res)
                     },
                     onError: function (res) {
-                    /* You may add your own implementation here */
-                    console.log(res)
+                        /* You may add your own implementation here */
+                        console.log(res)
                     },
                     onClose: function () {
-                    /* You may add your own implementation here */
+                        /* You may add your own implementation here */
                     }
                 })
             }
@@ -123,15 +136,22 @@ const FormOrder = ({
     }
 
     const handleAddButton = async () => {
+        const treatment_id = formOrder.getValues("treatment_id") ?? "";
+        const picture_before = formOrder.getValues("picture_before") ?? new Blob;
+        const shoe_name = formOrder.getValues("shoe_name") ?? "";
+        const shoe_type_id = formOrder.getValues("shoe_type_id") ?? "";
+        const t = treatment_options.find((to) => +treatment_id == to.id);
+        const currT = t?.price ?? "0";
+        const newPrice = +currT + totalPrice;
+
         const newOrderDetail = {
-            treatment_id: formOrder.getValues("treatment_id"),
-            picture_before: URL.createObjectURL(formOrder.getValues("picture_before")),
-            shoe_name: formOrder.getValues("shoe_name"),
-            shoe_type_id: formOrder.getValues("shoe_type_id")
+            treatment_id: treatment_id,
+            picture_before: URL.createObjectURL(picture_before),
+            shoe_name: shoe_name,
+            shoe_type_id: shoe_type_id,
+            recent_price: +currT
         };
         setOrderDetail(prev => [...prev, newOrderDetail]);
-        const t = treatment_options.find((to) => +newOrderDetail.treatment_id == to.id);
-        const newPrice = +t?.price + totalPrice;
         setTotalPrice(newPrice);
         // currentInputFile.current!.value = "";
     };
@@ -407,12 +427,12 @@ const FormOrder = ({
                                 <p>Tidak ada order...</p>
                             }
                             {orderDetail.length > 0 &&
-                            <>
-                                <span>Total Harga : Rp. {Intl.NumberFormat('id-ID').format(totalPrice)}</span>
-                                <Button variant={'outline'} className="bg-green-500 hover:bg-green-600 text-white hover:text-white">
-                                    Checkout Sekarang!
-                                </Button>
-                            </>
+                                <>
+                                    <span>Total Harga : Rp. {Intl.NumberFormat('id-ID').format(totalPrice)}</span>
+                                    <Button variant={'outline'} className="bg-green-500 hover:bg-green-600 text-white hover:text-white" disabled={formOrder.formState.isSubmitting}>
+                                        Checkout Sekarang!
+                                    </Button>
+                                </>
                             }
                         </div>
                     </div>
