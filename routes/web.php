@@ -6,6 +6,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\TreatmentController;
 use App\Http\Controllers\UserAddressController;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function() {
     Route::get('/menu/list', [MenuController::class, 'index'])->name('menu.index');
     Route::get('/treatment/list', [TreatmentController::class, 'index'])->name('treatment.index');
     Route::get('/order/list', [OrderController::class, 'dashboard'])->name('order.index');
+    Route::get('/tracking/list', [TrackingController::class, 'index'])->name('tracking.index');
     Route::get('/order/placement', [OrderController::class, 'index'])->name('order.placement');
     Route::post('/order/placement', [MidtransController::class, 'create_order'])->name('order.placement.store');
     Route::post('/order/callback', [OrderController::class, 'callback'])->name('order.callback');
@@ -56,6 +58,7 @@ Route::middleware('auth')->group(function() {
     Route::resource('treatment', TreatmentController::class)->except('index');
     Route::resource('order', OrderController::class)->except('index');
     Route::resource('user-address', UserAddressController::class)->except('index');
+    Route::resource('tracking', TrackingController::class)->except('index');
 });
 
 

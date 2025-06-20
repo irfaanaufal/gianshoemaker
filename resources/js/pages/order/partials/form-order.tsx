@@ -95,45 +95,83 @@ const FormOrder = ({
         }
     };
 
+    const handleMarkerDragEnd = (e: google.maps.MapMouseEvent) => {
+        const lat = e.latLng?.lat() ?? 0;
+        const lng = e.latLng?.lng() ?? 0;
+
+        setSelectedLocation({ lat, lng });
+        formOrder.setValue('custom_lat', lat.toString());
+        formOrder.setValue('custom_long', lng.toString());
+
+        try {
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                if (status === "OK" && results && results.length > 0) {
+                    const formattedAddress = results[0].formatted_address;
+                    formOrder.setValue('custom_address', formattedAddress);
+                } else {
+                    console.error("Geocoder failed due to: " + status);
+                    formOrder.setValue('custom_address', "Alamat tidak ditemukan");
+                }
+            });
+        } catch (error) {
+            console.error("Reverse geocoding error:", error);
+            formOrder.setValue('custom_address', "Alamat tidak ditemukan");
+        }
+    };
+
     const onSubmit = async (data: FormOrderValue) => {
         try {
-            const newData = { ...data, order_details: orderDetail, total_price: totalPrice };
+            const newData = {
+                ...data,
+                order_details: orderDetail,
+                total_price: totalPrice,
+                custom_user: existUser ? undefined : data.custom_user,
+                custom_address: existAddress ? undefined : data.custom_address,
+                custom_lat: existAddress ? undefined : data.custom_lat,
+                custom_long: existAddress ? undefined : data.custom_long
+            };
+
             const response = await api.post(route('order.store'), newData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }
             });
+
             if (response.status === 200) {
                 window.snap.pay(response.data.token, {
                     onSuccess: async (res) => {
-                        /* You may add your own implementation here */
-                        console.log(res)
-                        const nData = { order: response.data.order, addon_order: response.data.addon_order, order_details: response.data.order_details };
-                        const res1 = await api.post(route('order.callback'), nData);
-                        if (res1.status == 200) {
-                            toast(res1.data.message);
-                            setTimeout(() => {
-                                window.location.href = route('order.index');
-                            }, 3000);
+                        try {
+                            const callbackData = {
+                                order: response.data.order,
+                                addon_order: response.data.addon_order,
+                                order_details: response.data.order_details
+                            };
+
+                            const callbackResponse = await api.post(route('order.callback'), callbackData);
+
+                            if (callbackResponse.status === 200) {
+                                toast(callbackResponse.data.message);
+                                setTimeout(() => {
+                                    window.location.href = route('order.index');
+                                }, 3000);
+                            }
+                        } catch (error) {
+                            console.error('Callback error:', error);
+                            toast.error('Failed to process payment callback');
                         }
                     },
-                    onPending: function (res) {
-                        /* You may add your own implementation here */
-                        console.log(res)
-                    },
-                    onError: function (res) {
-                        /* You may add your own implementation here */
-                        console.log(res)
-                    },
-                    onClose: function () {
-                        /* You may add your own implementation here */
+                    onError: (res) => {
+                        console.error('Payment error:', res);
+                        toast.error('Payment failed');
                     }
-                })
+                });
             }
         } catch (error) {
-            console.log(error);
+            console.error('Order submission error:', error);
+            toast.error('Failed to create order');
         }
-    }
+    };
 
     const handleAddButton = async () => {
         const treatment_id = formOrder.getValues("treatment_id") ?? "";
@@ -317,7 +355,13 @@ const FormOrder = ({
                                             mapContainerStyle={{ width: "100%", height: "100%" }}
                                             center={selectedLocation || { lat: -6.200000, lng: 106.816666 }}
                                             zoom={15}>
-                                            {selectedLocation && <Marker position={selectedLocation} />}
+                                            {selectedLocation &&
+                                                <Marker
+                                                    position={selectedLocation}
+                                                    draggable
+                                                    onDragEnd={handleMarkerDragEnd}
+                                                />
+                                            }
                                         </GoogleMap>
                                     </div>
                                 </>

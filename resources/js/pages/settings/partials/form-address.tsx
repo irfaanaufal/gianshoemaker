@@ -109,6 +109,31 @@ const FormCreateAddress = ({
         }
     };
 
+    const handleMarkerDragEnd = (e: google.maps.MapMouseEvent) => {
+        const lat = e.latLng?.lat() ?? 0;
+        const lng = e.latLng?.lng() ?? 0;
+
+        setSelectedLocation({ lat, lng });
+        addressForm.setValue('lat', lat.toString());
+        addressForm.setValue('long', lng.toString());
+
+        try {
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                if (status === "OK" && results && results.length > 0) {
+                    const formattedAddress = results[0].formatted_address;
+                    addressForm.setValue('address', formattedAddress);
+                } else {
+                    console.error("Geocoder failed due to: " + status);
+                    addressForm.setValue('address', "Alamat tidak ditemukan");
+                }
+            });
+        } catch (error) {
+            console.error("Reverse geocoding error:", error);
+            addressForm.setValue('address', "Alamat tidak ditemukan");
+        }
+    };
+
     // 2. Define a submit handler.
     const onSubmit = async (data: AddressFormValue) => {
         try {
@@ -205,7 +230,13 @@ const FormCreateAddress = ({
                         mapContainerStyle={{ width: "100%", height: "100%" }}
                         center={selectedLocation || { lat: -6.200000, lng: 106.816666 }}
                         zoom={15}>
-                        {selectedLocation && <Marker position={selectedLocation} />}
+                        {selectedLocation &&
+                            <Marker
+                                position={selectedLocation}
+                                draggable
+                                onDragEnd={handleMarkerDragEnd}
+                            />
+                        }
                     </GoogleMap>
                 </div>
 

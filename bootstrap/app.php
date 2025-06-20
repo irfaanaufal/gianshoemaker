@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AccessPageByRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\VerifyLocalApiKey;
@@ -25,7 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'verify-local-api' => VerifyLocalApiKey::class
+            'verify-local-api' => VerifyLocalApiKey::class,
+            'roles-permission' => AccessPageByRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -3,8 +3,8 @@ import HeadingSmall from '@/components/heading-small';
 import { UserAddress, type BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import { useEffect, useState } from 'react';
-import { useLoadScript, GoogleMap, Marker, Autocomplete, useJsApiLoader } from "@react-google-maps/api";
+import { useState } from 'react';
+import { GoogleMap, Marker, Autocomplete, useJsApiLoader } from "@react-google-maps/api";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 

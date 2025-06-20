@@ -9,6 +9,40 @@ use Illuminate\Support\Facades\Http;
 
 class LogAnalystController extends Controller
 {
+    public function testApiKey()
+    {
+        try {
+            $response = Http::withToken(env("OPEN_AI_API"))
+                ->post('https://api.openai.com/v1/chat/completions', [
+                    'model' => 'gpt-3.5-turbo',
+                    'messages' => [
+                        ['role' => 'user', 'content' => 'Halo, apakah kamu bisa menjawab?']
+                    ]
+                ]);
+
+            // Memeriksa status respon
+            if ($response->successful()) {
+                $data = $response->json();
+                $content = $data['choices'][0]['message']['content'] ?? 'No response content';
+
+                // Logika berhasil
+                echo "✅ API key berhasil digunakan!\n";
+                echo "Respon dari ChatGPT:\n";
+                echo $content;
+            } else {
+                // Tangani error status selain 401
+                echo "⚠️ Terjadi error lain: " . $response->body();
+            }
+        } catch (\Exception $error) {
+            // Tangani error yang terjadi
+            if ($error->getCode() == 401) {
+                echo "❌ API key salah atau tidak valid.";
+            } else {
+                echo "⚠️ Terjadi error lain: " . $error->getMessage();
+            }
+        }
+    }
+
     public function analyze(Request $request)
     {
         $request->validate(['image' => 'required|image|max:4096']);
@@ -49,7 +83,7 @@ class LogAnalystController extends Controller
 
         $response = Http::withToken(env("OPEN_AI_API"))
             ->post('https://api.openai.com/v1/chat/completions', [
-                'model' => 'gpt-4o',
+                'model' => 'gpt-3.5-turbo',
                 'messages' => [
                     ['role' => 'system', 'content' => 'You are a shoe cleaning expert AI assistant.'],
                     [
@@ -74,7 +108,7 @@ class LogAnalystController extends Controller
             ], 500);
         }
 
-        $content = $json['choices'][0]['message']['content'];
+        $content = $json['choices'][0]['message']['content'] ?? 'No response content';
         $result = json_decode($content, true);
 
         $treatment = Treatment::where('slug', $result['recommended_treatment_slug'])->first();

@@ -5,14 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Http\Requests\Order\StoreRequest as OrderStore;
-use App\Http\Requests\Order\UpdateRequest as OrderUpdate;
 use App\Http\Services\MidtransService;
 use App\Models\ShoeType;
 use App\Models\Treatment;
 use App\Models\User;
 use App\Models\UserAddress;
-use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -57,39 +54,58 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $generatedTrx = "TRX" . time() . date('Y') * date('m') * date('d') + time();
-        $user = User::find($request->user_id);
-        $address = UserAddress::find($request->user_address_id);
-        $data = [
-            "order_id" => $generatedTrx,
-            "gross_amount" => $request->total_price,
-            "first_name" => $user ?  $user->name : $request->custom_user,
-            "address" => $address ? $address->address : $request->custom_address,
-            "email" => $user ?  $user->email : "",
-            "order_details" => $request->order_details,
-        ];
-        $addon_data = [
-            "user_id" => $user->id,
-            "user_address_id" => $address->id,
-            "custom_user" => $request->custom_user ?? null,
-            "custom_lat" => $request->custom_lat ?? null,
-            "custom_long" => $request->custom_long ?? null,
-        ];
-        // Panggil fungsi createOrder dari service Midtrans
-        $token = $this->midtransService->create_order($data);
+        try {
+            $generatedTrx = "TRX" . time() . date('Y') * date('m') * date('d') + time();
 
-        $newOrderDetails = [];
-        foreach ($request->order_details as $ods) {
-            array_push($newOrderDetails, (object)[
-                "treatment_id" => $ods["treatment_id"] ?? $ods->treatment_id,
-                "shoe_type_id" => $ods["shoe_type_id"] ?? $ods->shoe_type_id,
-                "shoe_name" => $ods["shoe_name"] ?? $ods->shoe_name,
-                "recent_price" => (int)$ods["recent_price"] ?? (int)$ods->recent_price,
-            ]);
+            // Handle both registered and guest users
+            $user = $request->user_id ? User::find($request->user_id) : null;
+            $address = $request->user_address_id ? UserAddress::find($request->user_address_id) : null;
+
+            $data = [
+                "order_id" => $generatedTrx,
+                "gross_amount" => $request->total_price,
+                "first_name" => $user ? $user->name : $request->custom_user,
+                "address" => $address ? $address->address : $request->custom_address,
+                "email" => $user ? $user->email : "",
+                "order_details" => $request->order_details,
+            ];
+
+            $addon_data = [
+                "user_id" => $user ? $user->id : null,
+                "user_address_id" => $address ? $address->id : null,
+                "custom_user" => $request->custom_user,
+                "custom_lat" => $request->custom_lat,
+                "custom_long" => $request->custom_long,
+                "custom_address" => $request->custom_address
+            ];
+
+            // Create Midtrans token
+            $token = $this->midtransService->create_order($data);
+
+            $newOrderDetails = [];
+            foreach ($request->order_details as $ods) {
+                $newOrderDetails[] = (object)[
+                    "treatment_id" => $ods["treatment_id"],
+                    "shoe_type_id" => $ods["shoe_type_id"],
+                    "shoe_name" => $ods["shoe_name"],
+                    "recent_price" => (int)$ods["recent_price"]
+                ];
+            }
+
+            return response()->json([
+                'token' => $token,
+                'order' => $data,
+                "addon_order" => $addon_data,
+                "order_details" => $newOrderDetails
+            ], 200);
+
+        } catch (\Exception $e) {
+            \Log::error('Order creation failed: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to create order',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        // Kirim token ke frontend
-        return response()->json(['token' => $token, 'order' => $data, "addon_order" => $addon_data, "order_details" => $newOrderDetails], 200);
     }
 
     public function callback(Request $request)
@@ -134,7 +150,12 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        //
+        $order->update([
+            'status' => $request->status
+        ]);
+        return response()->json([
+            "message" => "Berhasil update order!"
+        ], 201);
     }
 
     /**

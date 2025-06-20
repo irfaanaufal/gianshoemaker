@@ -49,8 +49,8 @@ class MenuSeeder extends Seeder
             ],
             (object)[
                 "name" => "Tracking Order",
-                "url" => "/order/list",
-                "route" => "order.index",
+                "url" => "/tracking/list",
+                "route" => "tracking.index",
                 "icon" => "fa-solid fa-map-location",
                 "is_active" => true
             ],

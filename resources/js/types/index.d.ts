@@ -91,6 +91,7 @@ export interface Order {
     user: User;
     user_address_id: number;
     user_address: UserAddress;
+    custom_user?: string;
     custom_address?: string;
     custom_lat?: string;
     custom_long?: string;

@@ -3,6 +3,9 @@ import AppLayout from "@/layouts/app-layout";
 import { Head, Link } from "@inertiajs/react";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { api } from "../../lib/utils";
+import { toast } from "sonner";
 
 const PageOrder = ({
     title,
@@ -17,6 +20,7 @@ const PageOrder = ({
             href: '/order/list',
         },
     ];
+    const [status, setStatus] = useState<string>("");
     const columns = [
         {
             key: "trx",
@@ -34,6 +38,20 @@ const PageOrder = ({
             sortable: false
         }
     ];
+
+    const handleClick = async (status: string, row: Order) => {
+        try {
+            const response = await api.post(route('order.update', { order: row }), { status: status, _method: "put" });
+            if (response.status == 201) {
+                toast(response.data.message);
+            }
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        } catch (error) {
+            console.log(`Error : `, error);
+        }
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -55,24 +73,29 @@ const PageOrder = ({
                         rowIdKey="id"
                         actions={(row) => (
                             <div className="flex gap-2">
-                                <Link href={'#'}>
-                                    <Button variant="outline" className="bg-yellow-500 hover:bg-yellow-600">
+                                {row.status == 'pending' ?
+                                    <Button variant="outline" className="bg-yellow-500 hover:bg-yellow-600" onClick={() => handleClick('processing', row)}>
                                         <i className="fa-solid fa-pencil"></i>
                                     </Button>
-                                </Link>
-                                {/* <DrawerDialogForm
-                                    buttonLabel="Detail"
-                                    dialogTitle="Detail Menu"
-                                    dialogDescription=""
-                                    form={<FormCreateMenu menu={row} readMode={true} roles={roles} />}
-                                />
-                                <AlertDelete
-                                    buttonLabel={<i className="fa-solid fa-trash"></i>}
-                                    buttonClassName="text-white"
-                                    url={route('menu.destroy', { menu: row.id })}
-                                /> */}
+                                    :
+                                    row.status == 'processing' ?
+                                        <Button variant="outline" className="bg-yellow-500 hover:bg-yellow-600" onClick={() => handleClick('delivered', row)}>
+                                            <i className="fa-solid fa-pencil"></i>
+                                        </Button>
+                                        :
+                                        row.status == 'delivered' ?
+                                        <Button variant="outline" className="bg-yellow-500 hover:bg-yellow-600" onClick={() => handleClick('complete', row)}>
+                                            <i className="fa-solid fa-pencil"></i>
+                                        </Button>
+                                        :
+                                        <></>
+                                }
+                                {/* <Button variant="outline" className="bg-yellow-500 hover:bg-yellow-600" onClick={() => handleClick('', row)}>
+                                    <i className="fa-solid fa-pencil"></i>
+                                </Button> */}
                             </div>
-                        )}
+                        )
+                        }
                     />
                 </div>
             </div>
