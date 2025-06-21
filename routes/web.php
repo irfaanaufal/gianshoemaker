@@ -17,11 +17,14 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/chatbot', function() {
-    return Inertia::render('openai');
+    return Inertia::render('openai', [
+        "title" => "Rekomendasi Treatment"
+    ]);
 })->name('openai');
 
 Route::controller(LogAnalystController::class)->group(function() {
     Route::post('/chatbot/treatment/recomendation', 'analyze')->name('openai.treatment.analyze');
+    Route::post('/chatbot/treatment/recomendation/test', 'analyzeTest')->name('openai.treatment.analyze.test');
 });
 
 

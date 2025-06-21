@@ -8,19 +8,25 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/utils';
+import { Separator } from '../components/ui/separator';
 interface OpenAi {
     dirtiness_level: string;
     is_yellowing: boolean;
-    recommended_treatment_slug: Treatment;
+    treatment: Treatment;
     reason: string;
 }
 
-export default function Welcome() {
+export default function OpenAITreatment({
+    title
+}: {
+    title: string
+}) {
     const { auth } = usePage<SharedData>().props;
     const inputFile = useRef<HTMLInputElement>(null);
     const [imagePath, setImagePath] = useState<string>("/assets/no-img.jpg");
     const [loading, setLoading] = useState<boolean | undefined>(undefined);
     const [openaiRes, setOpenaiRes] = useState<OpenAi>();
+    const [openaiRes1, setOpenaiRes1] = useState<string>("");
     const schemaOpenAi = z.object({
         image: z.instanceof(File)
             .refine(file => ['image/png', 'image/jpg', 'image/jpeg'].includes(file.type), {
@@ -42,6 +48,7 @@ export default function Welcome() {
             if (response.status == 201) {
                 setLoading(false);
                 setOpenaiRes(response.data);
+                // setOpenaiRes1(response.data.feedback);
             }
         } catch (error) {
             console.log(error);
@@ -51,7 +58,7 @@ export default function Welcome() {
 
     return (
         <div className="relative p-3">
-            <Head title="Welcome">
+            <Head title={title}>
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
             </Head>
@@ -85,10 +92,10 @@ export default function Welcome() {
                 </header>
 
                 {/* Section OpenAI */}
-                <div className="flex flex-col w-full h-screen justify-start items-center mb-[2rem] rounded-xl shadow-xl bg-slate-100 p-3 space-y-3">
+                <div className="flex flex-col w-full md:w-1/2 lg:w-1/2 h-screen justify-start items-center mb-[2rem] p-3 space-y-3">
                     <div className="flex flex-col">
                         <h1 className="text-4xl font-bold text-center mb-3 dark:text-white">
-                            Chat with Our ChatBox
+                            AI Rekomendasi Treatment
                         </h1>
                     </div>
 
@@ -100,7 +107,7 @@ export default function Welcome() {
                                     name="image"
                                     render={({ field: { value, onChange, ...fieldProps } }) => (
                                         <FormItem>
-                                            <FormLabel>Nama Sepatu</FormLabel>
+                                            <FormLabel>Masukkan Foto Sepatu</FormLabel>
                                             <FormControl>
                                                 <Input {...fieldProps} ref={inputFile} type="file" onChange={(e) => {
                                                     if (e.target.files && e.target.files[0]) {
@@ -124,18 +131,32 @@ export default function Welcome() {
                             </div>
                         </form>
                         {loading ?
-                        <p className="text-center">Loding...</p>
-                        :
-                        <></>
+                            <p className="text-center">Loding...</p>
+                            :
+                            <></>
                         }
-                        {openaiRes &&
-                            <div className="flex flex-col space-y-3">
-                                <span>Level Kekotoran Sepatu : <strong>{openaiRes?.dirtiness_level}</strong></span>
+                        {
+                            openaiRes
+                            &&
+                            <div className="flex flex-col space-y-3 w-full md:w-1/2 lg:w-1/2">
+                                <h3 className="text-xl font-bold text-center">Hasil Analisis</h3>
+                                <Separator/>
+                                <span>Level Kekotoran Sepatu : <strong>{openaiRes?.dirtiness_level.toUpperCase()}</strong></span>
                                 {openaiRes?.is_yellowing && <span>Membutuhkan treatment tambahan : <strong>Ya</strong></span>}
-                                <span>Rekomendasi Treatment : <strong>{openaiRes?.recommended_treatment_slug?.name}</strong></span>
-                                <p>Alasan : {openaiRes?.reason}</p>
+                                <span>Rekomendasi Treatment : <strong>{openaiRes?.treatment?.name.toUpperCase()}</strong></span>
+                                <p>Alasan : <br/> {openaiRes?.reason}</p>
                             </div>
                         }
+                        {/*
+                        {
+                            openaiRes1
+                            &&
+                            <div className="flex flex-col space-y-3">
+                                <h3 className="text-xl font-medium">Response GPT:</h3>
+                                <p>{openaiRes1}</p>
+                            </div>
+                        }
+                         */}
                     </Form>
                 </div>
                 <div className="hidden h-14.5 lg:block"></div>
