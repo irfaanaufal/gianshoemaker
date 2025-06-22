@@ -150,7 +150,74 @@ class LogAnalystController extends Controller
                         "description": "treatment_description",
                         "price": "treatment_price"
                     },
-                    "reason": "penjelasan mengapa treatment tersebut dipilih"
+                    "reason": "
+                    (!!!REMINDER : UNTUK ISI KONTENNYA HARAP DIBUAT DIDALAM TAG HTML YANG PAS AGAR MERENDER OUTPUTNNYA OTOMATIS MERENDER DENGAN TAG HTML PADA FRONTENDNYA!!!)
+                    (BERIKAN CLASSNAME 'text-xl' UNTUK HEADING 1, LALU UNTUK TAG BARIS BARU MENJADI <br/>, UNTUK SETIAP AKHIR LIST PADA PERHITUNGAN SKALA PERSENAN HARAP DIBERI TAG BARIS BARU BUKAN DI HEADING!)
+                    ANALISIS KHUSUS UNTUK GAMBAR SEPATU. JIKA GAMBAR YANG DIUNGGAH BUKAN GAMBAR SEPATU, JANGAN MELAKUKAN ANALISIS LAIN. CUKUP BERIKAN JAWABAN:
+                    'Saya Tida Melihat Sepatu Pada Gambar Tersebut'.
+                    JIKA GAMBAR YANG DI UPLOAD ADALAH SEPATU SELANJUTNYA Lakukan analisis apakah sepatu ini baru atau kotor. JIKA BARU BERIKAN JAWABAN:
+                    'Sepatu Ini Baru Tidak Terdeteksi Kekotoran' DAN TIDAK USAH MELANJUTKAN ANALISIS.
+                    JIKA KOTOR LANJUT ANALISISNYA DENGAN ATURAN BERIKUT:
+                    berikan garis pemisah untuk setiap section
+                    Section 1 (TULISAN BOLD atau h1)
+                    1. Tingkat Kekotoran Sepatu (Skala 10%-100%): (HASIL ANALISIS DALAM BENTUK PERSENTASE. TULISAN BOLD. jika hasil analisis sepatu bersih berikan persentase 0% jangan 10%)
+                    Section 2 (TULISAN BOLD atau h1)
+                    1. Detail Analisis Per Bagian Sepatu;
+                    2. Upper (Bagian Atas): (TULISAN BOLD atau h1);
+                    3. Midsole (Bagian Tengah): (TULISAN BOLD atau h1);
+                    4. Outsole (Bagian Bawah): (TULISAN BOLD atau h1);
+                    Jika Kotor Lakukan analisis tingkat kekotoran sepatu berdasarkan gambar yang diberikan. Detailkan dengan aturan berikut:
+                    Tingkat Kekotoran Sepatu (Skala 10%-100%).
+                    <strong>10%</strong>:
+                    - Sedikit debu atau noda kecil yang hampir tidak terlihat.
+                    - Kotoran hanya terdapat di area tertentu, seperti ujung outsole.
+                    <strong>20%</strong>:
+                    - Debu ringan lebih terlihat di permukaan upper dan outsole.
+                    - Terdapat noda tipis seperti bekas sentuhan tangan atau percikan air.
+                    <strong>30%</strong>:
+                    - Debu lebih menyebar di seluruh permukaan, terutama upper.
+                    - Noda ringan seperti bercak air atau minyak kecil mulai terlihat jelas.
+                    <strong>40%</strong>:
+                    - sedikit Lumpur kering mulai terlihat di outsole dan sebagian kecil midsole.
+                    - Noda makanan atau minyak menempel pada beberapa bagian.
+                    - Warna material sedikit kusam.
+                    <strong>50%</strong>:
+                    - banyak Lumpur kering lebih luas di outsole dan midsole.
+                    - Noda mulai meresap ke material, terutama pada bahan kain atau suede.
+                    - Perubahan warna pada beberapa area lebih jelas.
+                    <strong>60%</strong>:
+                    - Noda minyak atau makanan yang meresap lebih dominan.
+                    - Lumpur kering tersebar di banyak bagian outsole dan midsole.
+                    - Warna material semakin pudar atau berubah.
+                    <strong>70%</strong>:
+                    - Lumpur atau noda makanan menutupi sebagian besar outsole dan upper.
+                    - Minyak yang meresap sulit dihilangkan dengan pembersihan ringan.
+                    - Warna material terlihat sangat kusam.
+                    <strong>80%</strong>:
+                    - Lumpur basah atau kotoran tebal menutupi banyak bagian sepatu.
+                    - Noda oli atau makanan terlihat menyebar merata.
+                    - Perubahan warna material sangat signifikan.
+                    <strong>90%</strong>:
+                    - Lumpur tebal menutupi hampir seluruh sepatu.
+                    - Noda oli meresap dalam dan warna asli sepatu sulit dikenali.
+                    - Material terlihat sangat rusak atau tertutup kotoran berat.
+                    <strong>100%</strong>:
+                    - Sepatu sepenuhnya tertutup kotoran berat seperti lumpur basah dan oli.
+                    - Tidak ada bagian material yang terlihat bersih.
+                    - Warna asli sepatu tidak dapat dikenali sama sekali.
+                    Detail Analisis Per Bagian Sepatu
+                    <strong>Upper (Bagian Atas):</strong>
+                    - Jelaskan tingkat kekotorannya dalam persentase.
+                    - Sebutkan jenis noda apa yang terlihat (misal: debu, lumpur, oli, dll.).
+                    - Berikan detail area spesifik yang terkena noda (misal: upper kanan warna biru terkena lumpur coklat).
+                    <strong>Midsole (Bagian Tengah):</strong>
+                    - Jelaskan tingkat kekotorannya dalam persentase.
+                    - Sebutkan jenis noda apa yang terlihat (misal: kusam, bercak minyak, atau lumpur).
+                    - Jika midsole awalnya berwarna putih tetapi sudah menguning akibat pemakaian lama, berikan keterangan khusus.
+                    <strong>Outsole (Bagian Bawah):</strong>
+                    - Jelaskan tingkat kekotorannya dalam persentase.
+                    - Sebutkan jenis noda apa yang terlihat (misal: lumpur, tanah basah, atau bekas aspal).
+                    - Jika outsole tidak terlihat dalam gambar, beri keterangan (outsole tidak terlihat pada gambar)."
                 }
                 PROMPT;
 
@@ -211,6 +278,7 @@ class LogAnalystController extends Controller
                 'slug' => $treatment->slug,
                 'description' => $treatment->description,
                 'price' => $treatment->price,
+                'picture' => $treatment->picture
             ] : null,
             'reason' => $result['reason'],
         ], 201);

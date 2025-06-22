@@ -9,6 +9,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/utils';
 import { Separator } from '../components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { TreatmentCard } from '../components/ui/treatment-card';
 interface OpenAi {
     dirtiness_level: string;
     is_yellowing: boolean;
@@ -55,6 +57,13 @@ export default function OpenAITreatment({
         }
     }
 
+    const truncateDescription = (description: string, wordLimit: number = 20) => {
+        const words = description.split(" "); // Memecah deskripsi berdasarkan spasi
+        if (words.length <= wordLimit) {
+            return description; // Jika kataใน deskripsiไม่เกินขีดจำกัด
+        }
+        return words.slice(0, wordLimit).join(" ") + "..."; // Jikaเกินคำจำกัด, return with "..."
+    };
 
     return (
         <div className="relative p-3">
@@ -138,13 +147,29 @@ export default function OpenAITreatment({
                         {
                             openaiRes
                             &&
-                            <div className="flex flex-col space-y-3 w-full md:w-1/2 lg:w-1/2">
+                            <div className="flex flex-col space-y-3 w-full md:w-full lg:w-1/2">
                                 <h3 className="text-xl font-bold text-center">Hasil Analisis</h3>
-                                <Separator/>
+                                <Separator />
                                 <span>Level Kekotoran Sepatu : <strong>{openaiRes?.dirtiness_level.toUpperCase()}</strong></span>
                                 {openaiRes?.is_yellowing && <span>Membutuhkan treatment tambahan : <strong>Ya</strong></span>}
                                 <span>Rekomendasi Treatment : <strong>{openaiRes?.treatment?.name.toUpperCase()}</strong></span>
-                                <p>Alasan : <br/> {openaiRes?.reason}</p>
+                                <span>Alasan : </span>
+                                <br />
+                                <div dangerouslySetInnerHTML={{ __html: openaiRes?.reason }} />
+                                <Separator />
+                                <h3 className="text-xl font-bold text-center">Rekomendasi Treatment</h3>
+                                <Card className={`w-[15rem] p-3 mb-[1rem] mx-auto`}>
+                                    <img src={openaiRes?.treatment.picture} alt={openaiRes?.treatment.slug} className="rounded-md h-[10rem] object-cover" />
+                                    <CardHeader>
+                                        <CardTitle>{openaiRes?.treatment.name}</CardTitle>
+                                        <CardDescription>{truncateDescription(openaiRes?.treatment.description, 8)}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Link href={route('order.create')}>
+                                            <Button className="w-full">Pesan Sekarang</Button>
+                                        </Link>
+                                    </CardContent>
+                                </Card>
                             </div>
                         }
                         {/*
