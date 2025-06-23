@@ -1,4 +1,4 @@
-import { Order, OrderDetail, ShoeType, Treatment, User, UserAddress } from "@/types";
+import { Order, OrderDetail, SharedData, ShoeType, Treatment, User, UserAddress } from "@/types";
 import { z } from "zod";
 import { schemaOrder } from "./validation";
 import { useForm } from "react-hook-form";
@@ -14,35 +14,36 @@ import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/utils";
 import { toast } from "sonner";
+import { usePage } from "@inertiajs/react";
 import { calculateDistance } from "./utils";
 
-const FormOrder = ({
+const FormOrderPelanggan = ({
     editMode,
     readMode,
     order,
-    user_options,
     shoe_type_options,
     treatment_options,
 }: {
     editMode?: boolean;
     readMode?: boolean;
     order?: Order;
-    user_options: User[];
     shoe_type_options: ShoeType[];
     treatment_options: Treatment[];
 }) => {
-    const [existUser, setExistUser] = useState<boolean>(false);
+    const { props } = usePage();
+    const address: UserAddress[] = props.user_address as UserAddress[];
     const [existAddress, setExistAddress] = useState<boolean>(false);
-    const [userSelectedAddress, setUserSelectedAddress] = useState<UserAddress[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [orderDetail, setOrderDetail] = useState<OrderDetail[]>([]);
     const [totalPrice, setTotalPrice] = useState<number>(0);
+    const currentInputFile = useRef<HTMLInputElement>(null);
 
     // State untuk jarak
     const [distance, setDistance] = useState<number | null>(null);
-    const [fixedLocation, setFixedLocation] = useState<{ lat: number; lng: number } | null>(null);
-
-    const currentInputFile = useRef<HTMLInputElement>(null);
+    const [fixedLocation, setFixedLocation] = useState<{ lat: number; lng: number } | null>({
+        lat: import.meta.env.VITE_FIXED_LAT,
+        lng: import.meta.env.VITE_FIXED_LONG
+    });
 
     // Google Maps API loading
     const { isLoaded } = useJsApiLoader({
@@ -133,7 +134,6 @@ const FormOrder = ({
                 ...data,
                 order_details: orderDetail,
                 total_price: totalPrice,
-                custom_user: existUser ? undefined : data.custom_user,
                 custom_address: existAddress ? undefined : data.custom_address,
                 custom_lat: existAddress ? undefined : data.custom_lat,
                 custom_long: existAddress ? undefined : data.custom_long
@@ -202,10 +202,6 @@ const FormOrder = ({
     };
 
     useEffect(() => {
-        setFixedLocation({
-            lat: import.meta.env.VITE_FIXED_LAT,
-            lng: import.meta.env.VITE_FIXED_LONG
-        });
         if (fixedLocation && selectedLocation) {
             const dist = calculateDistance(
                 fixedLocation.lat,
@@ -224,88 +220,23 @@ const FormOrder = ({
                 <div className="flex lg:flex-row md:flex-row flex-col w-full gap-3">
                     <div className="w-full space-y-3">
                         <div className="flex flex-col space-y-3">
-                            <Label>Apakah pelanggan memiliki akun?</Label>
-                            <Switch defaultChecked={existUser} onClick={() => existUser == false ? setExistUser(true) : setExistUser(false)} />
-                            {existUser == true ?
-                                <FormField
-                                    control={formOrder.control}
-                                    name="user_id"
-                                    render={({ field: { value, onChange, ...fieldProps } }) => (
-                                        <FormItem>
-                                            <FormLabel>Pilih akun pelanggan</FormLabel>
-                                            <FormControl>
-                                                <Select defaultValue={value} {...fieldProps} onValueChange={(e) => {
-                                                    const user_address = user_options.filter((usr) => {
-                                                        return usr?.id?.toString() === e
-                                                    });
-                                                    Promise.all([
-                                                        onChange(e),
-                                                        setUserSelectedAddress(user_address[0]?.address ?? [])
-                                                    ])
-                                                }}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Pilih akun pelanggan" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {user_options.map((us) => (
-                                                            <SelectItem value={us.id.toString()}>{us.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                :
-                                <>
-                                    <FormField
-                                        control={formOrder.control}
-                                        name="custom_user"
-                                        render={({ field: { value, ...fieldProps } }) => (
-                                            <FormItem>
-                                                <FormLabel>Masukkan nama pelanggan</FormLabel>
-                                                <FormControl>
-                                                    <Input value={value} {...fieldProps} disabled={readMode} readOnly={readMode} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={formOrder.control}
-                                        name="custom_phone"
-                                        render={({ field: { value, ...fieldProps } }) => (
-                                            <FormItem>
-                                                <FormLabel>Masukkan nomor pelanggan yang dapat dihubungi</FormLabel>
-                                                <FormControl>
-                                                    <Input value={value} {...fieldProps} disabled={readMode} readOnly={readMode} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </>
-                            }
-                        </div>
-                        <div className="flex flex-col space-y-3">
-                            <Label>Apakah pelanggan alamat tersimpan?</Label>
+                            <Label>Apakah kamu memiliki alamat yang tersimpan?</Label>
                             <Switch defaultChecked={existAddress} onClick={() => existAddress == false ? setExistAddress(true) : setExistAddress(false)} />
-                            {existUser == true && existAddress == true ?
+                            {existAddress == true ?
                                 <FormField
                                     control={formOrder.control}
                                     name="user_address_id"
                                     render={({ field: { value, onChange, ...fieldProps } }) => (
                                         <FormItem>
-                                            <FormLabel>Pilih alamat tersimpan user</FormLabel>
+                                            <FormLabel>Pilih alamat tersimpan</FormLabel>
                                             <FormControl>
                                                 <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
                                                     <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Pilih alamat pelanggan" />
+                                                        <SelectValue placeholder="Pilih alamat yang tersimpan" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        {userSelectedAddress.map((usa) => (
-                                                            <SelectItem value={usa.id.toString()}>{usa.address}</SelectItem>
+                                                        {address.map((addrs, idx) => (
+                                                            <SelectItem value={addrs.id.toString()} key={addrs.id}>{addrs.address}</SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
@@ -433,7 +364,7 @@ const FormOrder = ({
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {shoe_type_options.map((st) => (
-                                                    <SelectItem value={st.id.toString()}>{st.name}</SelectItem>
+                                                    <SelectItem value={st.id.toString()} key={st.slug}>{st.name}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -455,7 +386,7 @@ const FormOrder = ({
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {treatment_options.map((treatment) => (
-                                                    <SelectItem value={treatment.id.toString()}>{treatment.name}</SelectItem>
+                                                    <SelectItem value={treatment.id.toString()} key={treatment.slug}>{treatment.name}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -486,9 +417,9 @@ const FormOrder = ({
                         <div className="flex flex-col mt-4 p-3 space-y-3">
                             <h2 className="text-xl font-bold">List Order</h2>
                             {orderDetail.length > 0 ?
-                                orderDetail.map((od) =>
+                                orderDetail.map((od, idx) =>
                                 (
-                                    <Card>
+                                    <Card key={idx}>
                                         <CardHeader>
                                             <CardTitle>Nama Sepatu : {od.shoe_name}</CardTitle>
                                             <CardAction>
@@ -500,7 +431,7 @@ const FormOrder = ({
                                         <CardContent className="flex flex-col">
                                             <span>Jenis Sepatu : {shoe_type_options.find((st => +od.shoe_type_id == st.id))?.name}</span>
                                             <span>Treatment yang dipilih : {treatment_options.find((t => +od.treatment_id == t.id))?.name}</span>
-                                            <span>Harga : Rp. {Intl.NumberFormat('id-ID').format(treatment_options.find((t => +od.treatment_id == t.id))?.price)}</span>
+                                            <span>Harga : Rp. {Intl.NumberFormat('id-ID').format(treatment_options.find((t => +od.treatment_id == t.id)).price)}</span>
                                         </CardContent>
                                     </Card>
                                 ))
@@ -522,4 +453,4 @@ const FormOrder = ({
         </Form>
     );
 }
-export default FormOrder;
+export default FormOrderPelanggan;

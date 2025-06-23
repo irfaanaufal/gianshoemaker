@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('address');
             $table->decimal('lat')->nullable();
             $table->decimal('long')->nullable();
+            $table->decimal('distance')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

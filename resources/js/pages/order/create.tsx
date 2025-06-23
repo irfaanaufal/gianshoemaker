@@ -1,8 +1,9 @@
 import { BreadcrumbItem, ShoeType, Treatment, User } from "@/types";
 import AppLayout from "@/layouts/app-layout";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, usePage } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import FormOrder from "./partials/form-order";
+import FormOrderPelanggan from "./partials/form-order-pelanggan";
 
 const PageCreateOrder = ({
     title,
@@ -15,6 +16,8 @@ const PageCreateOrder = ({
     users: User[];
     treatments: Treatment[];
 }) => {
+    const { auth } = usePage().props;
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Order',
@@ -27,6 +30,7 @@ const PageCreateOrder = ({
     ];
 
     return (
+
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={title} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
@@ -36,11 +40,19 @@ const PageCreateOrder = ({
                     </h3>
                 </div>
                 <div className="w-full relative">
-                    <FormOrder
-                        user_options={users}
-                        shoe_type_options={shoe_types}
-                        treatment_options={treatments}
-                    />
+                    {
+                        auth.user?.roles?.[0].name == "pelanggan" ?
+                            <FormOrderPelanggan
+                                shoe_type_options={shoe_types}
+                                treatment_options={treatments}
+                            />
+                            :
+                            <FormOrder
+                                user_options={users}
+                                shoe_type_options={shoe_types}
+                                treatment_options={treatments}
+                            />
+                    }
                 </div>
             </div>
         </AppLayout>

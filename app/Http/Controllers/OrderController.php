@@ -10,6 +10,7 @@ use App\Models\ShoeType;
 use App\Models\Treatment;
 use App\Models\User;
 use App\Models\UserAddress;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -31,9 +32,16 @@ class OrderController extends Controller
 
     public function dashboard()
     {
+        $user = Auth::user();
+        $role = $user->getRoleNames();
+        $orders = new Order;
+        if ($role[0] == "pelanggan") {
+            $orders->where(['user_id', $user->id]);
+        }
+
         return Inertia::render('order/page', [
             "title" => "GIANSHOEMAKER | Order List",
-            "orders" => Order::with(['order_details', 'user', 'user_address'])->get()
+            "orders" => $orders->with(['order_details', 'user', 'user_address'])->get()
         ]);
     }
 
@@ -52,21 +60,30 @@ class OrderController extends Controller
         ]);
     }
 
+    protected function generateTrx(): string
+    {
+        return "TRX" . time() . date('Y') * date('m') * date('d') + time();
+    }
+
     public function store(Request $request)
     {
         try {
-            $generatedTrx = "TRX" . time() . date('Y') * date('m') * date('d') + time();
+            $custom = (object)[
+                "name" => $request->custom_user,
+                "address" => $request->custom_address,
+                "email" => "example@gmail.com"
+            ];
 
             // Handle both registered and guest users
-            $user = $request->user_id ? User::find($request->user_id) : null;
-            $address = $request->user_address_id ? UserAddress::find($request->user_address_id) : null;
+            $user = $request->user_id ? User::find($request->user_id) : $custom;
+            $address = $request->user_address_id ? UserAddress::find($request->user_address_id) : $custom->address;
 
             $data = [
-                "order_id" => $generatedTrx,
+                "order_id" => $this->generateTrx(),
                 "gross_amount" => $request->total_price,
                 "first_name" => $user ? $user->name : $request->custom_user,
                 "address" => $address ? $address->address : $request->custom_address,
-                "email" => $user ? $user->email : "",
+                "email" => $user ? $user->email : $custom->email,
                 "order_details" => $request->order_details,
             ];
 
@@ -106,6 +123,11 @@ class OrderController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function store_user_mode(Request $request)
+    {
+
     }
 
     public function callback(Request $request)

@@ -72,7 +72,7 @@ class MenuSeeder extends Seeder
                 'is_active' => $menu->is_active
             ]);
             $m->roles()->attach($admin->id);
-            if ($m->name == "Dashboard" || $m->name == "Transaksi") {
+            if ($m->name == "Dashboard" || $m->name == "Order") {
                 $m->roles()->attach($pelanggan->id);
             }
             if ($m->name == "Dashboard" || $m->name == "Tracking Order") {

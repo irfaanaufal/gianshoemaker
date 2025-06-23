@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useLoadScript, GoogleMap, Marker, Autocomplete as GoogleAutocomplete } from "@react-google-maps/api";
 import {
     Form,
@@ -34,8 +34,15 @@ const FormCreateAddress = ({
     readMode?: boolean;
     address?: UserAddress
 }) => {
+
     const { auth } = usePage<SharedData>().props;
+
+    // State untuk jarak
+    const [distance, setDistance] = useState<number | null>(null);
+    const [fixedLocation, setFixedLocation] = useState<{ lat: number; lng: number } | null>(null);
+
     type AddressFormValue = z.infer<typeof createAddressSchema>;
+
     const defaultValueMenuForm: Partial<AddressFormValue> = {
         label: address?.label ?? undefined,
         address: address?.address ?? undefined,
@@ -44,12 +51,6 @@ const FormCreateAddress = ({
     };
 
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
-
-    // Google Maps API loading
-    // const { isLoaded } = useJsApiLoader({
-    //     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, // API key from env
-    //     libraries: ["places"], // If you want to use Places API for search
-    // });
 
     // Google Maps API loading
     const { isLoaded } = useLoadScript({
@@ -150,6 +151,37 @@ const FormCreateAddress = ({
             console.log(error)
         }
     }
+
+    // Fungsi untuk menghitung jarak
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371; // Radius bumi dalam km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c; // Jarak dalam km
+        return distance;
+    };
+
+    useEffect(() => {
+        setFixedLocation({
+            lat: import.meta.env.VITE_FIXED_LAT,
+            lng: import.meta.env.VITE_FIXED_LONG
+        });
+        if (fixedLocation && selectedLocation) {
+            const dist = calculateDistance(
+                fixedLocation.lat,
+                fixedLocation.lng,
+                selectedLocation.lat,
+                selectedLocation.lng
+            );
+            setDistance(dist);
+        }
+    }, [selectedLocation, fixedLocation]);
+
     const isDesktop = useMediaQuery("(min-width: 768px)");
     if (!isLoaded) return <div>Loading...</div>;
     return (
@@ -224,6 +256,20 @@ const FormCreateAddress = ({
                     </div>
                 </div>
 
+                {distance !== null && fixedLocation && (
+                    <div className="p-4 bg-gray-100 rounded-md">
+                        <h3 className="font-medium">Informasi Jarak</h3>
+                        <p>Lokasi Tetap (Titik A):
+                            <span className="font-semibold">Jl. Sekeloa No.11, RT.01/RW.06, Sekeloa, Kecamatan Coblong, Kota Bandung, Jawa Barat 40134</span>
+                        </p>
+                        <p>Lokasi Input (Titik B):
+                            <span className="font-semibold">{addressForm.getValues("address")}</span>
+                        </p>
+                        <p>Jarak antara Titik A dan Titik B:
+                            <span className="font-semibold"> {distance.toFixed(2)} km</span>
+                        </p>
+                    </div>
+                )}
 
                 <div className="w-full h-[30rem]">
                     <GoogleMap
