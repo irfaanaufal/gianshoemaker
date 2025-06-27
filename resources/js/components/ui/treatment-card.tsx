@@ -31,7 +31,7 @@ const TreatmentCard = ({ data, className }: { data: Treatment[]; className?: str
                     <CardDescription>{truncateDescription(treatment.description, 8)}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Link href={route('order.placement')}>
+                    <Link href={route('order.create')}>
                         <Button className="w-full">Pesan Sekarang</Button>
                     </Link>
                 </CardContent>

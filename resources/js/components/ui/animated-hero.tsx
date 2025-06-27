@@ -35,7 +35,7 @@ function Hero() {
             </p>
           </div>
           <div className="flex flex-row gap-3">
-            <Link href={route('order.placement')}>
+            <Link href={route('order.create')}>
                 <Button size="lg" className="gap-4">
                 Gunakan Layanan Sekarang <MoveRight className="w-4 h-4" />
                 </Button>

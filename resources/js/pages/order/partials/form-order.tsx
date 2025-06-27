@@ -1,4 +1,4 @@
-import { Order, OrderDetail, ShoeType, Treatment, User, UserAddress } from "@/types";
+import { OrderDetail, ShoeType, Treatment, User, UserAddress } from "@/types";
 import { z } from "zod";
 import { schemaOrder } from "./validation";
 import { useForm } from "react-hook-form";
@@ -6,31 +6,32 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLoadScript, GoogleMap, Marker, Autocomplete as GoogleAutocomplete, useJsApiLoader } from "@react-google-maps/api";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { GoogleMap, Marker, Autocomplete as GoogleAutocomplete, useJsApiLoader } from "@react-google-maps/api";
+import { useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/utils";
 import { toast } from "sonner";
-import { calculateDistance } from "./utils";
+import { calculateDistance, calculateShippingPrice } from "./utils";
 
 const FormOrder = ({
-    editMode,
-    readMode,
-    order,
     user_options,
     shoe_type_options,
     treatment_options,
 }: {
-    editMode?: boolean;
-    readMode?: boolean;
-    order?: Order;
     user_options: User[];
     shoe_type_options: ShoeType[];
     treatment_options: Treatment[];
 }) => {
+    type FormOrderValue = z.infer<typeof schemaOrder>;
+
+    const fixedLocation: { lat: number; lng: number } = {
+        lat: import.meta.env.VITE_FIXED_LAT,
+        lng: import.meta.env.VITE_FIXED_LONG
+    }
+
     const [existUser, setExistUser] = useState<boolean>(false);
     const [existAddress, setExistAddress] = useState<boolean>(false);
     const [userSelectedAddress, setUserSelectedAddress] = useState<UserAddress[]>([]);
@@ -38,9 +39,10 @@ const FormOrder = ({
     const [orderDetail, setOrderDetail] = useState<OrderDetail[]>([]);
     const [totalPrice, setTotalPrice] = useState<number>(0);
 
-    // State untuk jarak
+    // State ntuk jarak
     const [distance, setDistance] = useState<number | null>(null);
-    const [fixedLocation, setFixedLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [addressB, setAddressB] = useState<string>("");
+    const [shipping, setShipping] = useState<number>(0);
 
     const currentInputFile = useRef<HTMLInputElement>(null);
 
@@ -50,7 +52,6 @@ const FormOrder = ({
         libraries: ["places"], // If you want to use Places API for search
     });
 
-    type FormOrderValue = z.infer<typeof schemaOrder>;
     const formOrder = useForm<FormOrderValue>({
         resolver: zodResolver(schemaOrder),
     });
@@ -70,6 +71,7 @@ const FormOrder = ({
                 formOrder.setValue('custom_lat', latitude.toString());
                 formOrder.setValue('custom_long', longitude.toString());
                 formOrder.setValue('custom_address', place.formatted_address ?? "");
+                setAddressB(place.formatted_address ?? "");
             }
         }
     };
@@ -89,14 +91,17 @@ const FormOrder = ({
                         if (status === "OK" && results && results.length > 0) {
                             const formattedAddress = results[0].formatted_address;
                             formOrder.setValue('custom_address', formattedAddress);
+                            setAddressB(formattedAddress ?? "");
                         } else {
                             console.error("Geocoder failed due to: " + status);
                             formOrder.setValue('custom_address', "Alamat tidak ditemukan");
+                            setAddressB("Alamat tidak ditemukan!");
                         }
                     });
                 } catch (error) {
                     console.error("Reverse geocoding error:", error);
                     formOrder.setValue('custom_address', "Alamat tidak ditemukan");
+                    setAddressB("Alamat tidak ditemukan!");
                 }
             });
         }
@@ -116,27 +121,65 @@ const FormOrder = ({
                 if (status === "OK" && results && results.length > 0) {
                     const formattedAddress = results[0].formatted_address;
                     formOrder.setValue('custom_address', formattedAddress);
+                    setAddressB(formattedAddress ?? "");
                 } else {
                     console.error("Geocoder failed due to: " + status);
                     formOrder.setValue('custom_address', "Alamat tidak ditemukan");
+                    setAddressB("Alamat tidak ditemukan!");
                 }
             });
         } catch (error) {
             console.error("Reverse geocoding error:", error);
             formOrder.setValue('custom_address', "Alamat tidak ditemukan");
+            setAddressB("Alamat tidak ditemukan!");
         }
     };
+
+    const handleAddButton = async () => {
+        const treatment_id = formOrder.getValues("treatment_id") ?? "";
+        const picture_before = formOrder.getValues("picture_before") ?? new Blob;
+        const shoe_name = formOrder.getValues("shoe_name") ?? "";
+        const shoe_type_id = formOrder.getValues("shoe_type_id") ?? "";
+        const t = treatment_options.find((to) => +treatment_id == to.id);
+        const currT = t?.price ?? "0";
+        const newPrice = +currT + totalPrice;
+
+        const newOrderDetail = {
+            treatment_id: treatment_id,
+            picture_before: URL.createObjectURL(picture_before),
+            shoe_name: shoe_name,
+            shoe_type_id: shoe_type_id,
+            recent_price: +currT
+        };
+        setOrderDetail(prev => [...prev, newOrderDetail]),
+        setShipping(calculateShippingPrice(distance ?? 0, orderDetail.length))
+        setTotalPrice(newPrice);
+        // currentInputFile.current!.value = "";
+    };
+
+    const findAddressById = (id: number | string): UserAddress | null => {
+        const row: UserAddress | undefined = userSelectedAddress.find((usaddrs) => id == usaddrs.id)
+        return row ?? null;
+    }
+
+    const findTreatmentById = (id: number | string): Treatment | null => {
+        const row: Treatment | undefined = treatment_options.find((t) => id == t.id);
+        return row ?? null;  // Mengembalikan null jika tidak ditemukan
+    }
+
+    const findShoeTypeById = (id: number | string): ShoeType | null => {
+        const row: ShoeType | undefined = shoe_type_options.find((st) => id == st.id);
+        return row ?? null;
+    }
 
     const onSubmit = async (data: FormOrderValue) => {
         try {
             const newData = {
                 ...data,
                 order_details: orderDetail,
-                total_price: totalPrice,
-                custom_user: existUser ? undefined : data.custom_user,
-                custom_address: existAddress ? undefined : data.custom_address,
-                custom_lat: existAddress ? undefined : data.custom_lat,
-                custom_long: existAddress ? undefined : data.custom_long
+                total_price: totalPrice + shipping,
+                delivery_fee: shipping,
+                distance_km: distance
             };
 
             const response = await api.post(route('order.store'), newData, {
@@ -147,7 +190,7 @@ const FormOrder = ({
 
             if (response.status === 200) {
                 window.snap.pay(response.data.token, {
-                    onSuccess: async (res) => {
+                    onSuccess: async (res: any) => {
                         try {
                             const callbackData = {
                                 order: response.data.order,
@@ -168,7 +211,7 @@ const FormOrder = ({
                             toast.error('Failed to process payment callback');
                         }
                     },
-                    onError: (res) => {
+                    onError: (res: any) => {
                         console.error('Payment error:', res);
                         toast.error('Payment failed');
                     }
@@ -180,32 +223,7 @@ const FormOrder = ({
         }
     };
 
-    const handleAddButton = async () => {
-        const treatment_id = formOrder.getValues("treatment_id") ?? "";
-        const picture_before = formOrder.getValues("picture_before") ?? new Blob;
-        const shoe_name = formOrder.getValues("shoe_name") ?? "";
-        const shoe_type_id = formOrder.getValues("shoe_type_id") ?? "";
-        const t = treatment_options.find((to) => +treatment_id == to.id);
-        const currT = t?.price ?? "0";
-        const newPrice = +currT + totalPrice;
-
-        const newOrderDetail = {
-            treatment_id: treatment_id,
-            picture_before: URL.createObjectURL(picture_before),
-            shoe_name: shoe_name,
-            shoe_type_id: shoe_type_id,
-            recent_price: +currT
-        };
-        setOrderDetail(prev => [...prev, newOrderDetail]);
-        setTotalPrice(newPrice);
-        // currentInputFile.current!.value = "";
-    };
-
     useEffect(() => {
-        setFixedLocation({
-            lat: import.meta.env.VITE_FIXED_LAT,
-            lng: import.meta.env.VITE_FIXED_LONG
-        });
         if (fixedLocation && selectedLocation) {
             const dist = calculateDistance(
                 fixedLocation.lat,
@@ -215,7 +233,7 @@ const FormOrder = ({
             );
             setDistance(dist);
         }
-    }, [selectedLocation, fixedLocation]);
+    }, [selectedLocation]);
 
     if (!isLoaded) return <div>Loading...</div>;
     return (
@@ -224,6 +242,28 @@ const FormOrder = ({
                 <div className="flex lg:flex-row md:flex-row flex-col w-full gap-3">
                     <div className="w-full space-y-3">
                         <div className="flex flex-col space-y-3">
+                            <FormField
+                                control={formOrder.control}
+                                name="service_method"
+                                render={({ field: { value, onChange, ...fieldProps } }) => (
+                                    <FormItem>
+                                        <FormLabel>Pilih jenis pelayanan</FormLabel>
+                                        <FormControl>
+                                            <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Pilih jenis pelayanan" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {['antar jemput', 'antar', 'pickup'].map((jp, idxjp) => (
+                                                        <SelectItem value={jp} key={idxjp}>{jp.toUpperCase()}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             <Label>Apakah pelanggan memiliki akun?</Label>
                             <Switch defaultChecked={existUser} onClick={() => existUser == false ? setExistUser(true) : setExistUser(false)} />
                             {existUser == true ?
@@ -247,8 +287,8 @@ const FormOrder = ({
                                                         <SelectValue placeholder="Pilih akun pelanggan" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        {user_options.map((us) => (
-                                                            <SelectItem value={us.id.toString()}>{us.name}</SelectItem>
+                                                        {user_options.map((us, idxus) => (
+                                                            <SelectItem value={us.id.toString()} key={idxus}>{us.name}</SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
@@ -266,7 +306,7 @@ const FormOrder = ({
                                             <FormItem>
                                                 <FormLabel>Masukkan nama pelanggan</FormLabel>
                                                 <FormControl>
-                                                    <Input value={value} {...fieldProps} disabled={readMode} readOnly={readMode} />
+                                                    <Input value={value} {...fieldProps} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -279,7 +319,7 @@ const FormOrder = ({
                                             <FormItem>
                                                 <FormLabel>Masukkan nomor pelanggan yang dapat dihubungi</FormLabel>
                                                 <FormControl>
-                                                    <Input value={value} {...fieldProps} disabled={readMode} readOnly={readMode} />
+                                                    <Input value={value} {...fieldProps} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -289,31 +329,67 @@ const FormOrder = ({
                             }
                         </div>
                         <div className="flex flex-col space-y-3">
-                            <Label>Apakah pelanggan alamat tersimpan?</Label>
-                            <Switch defaultChecked={existAddress} onClick={() => existAddress == false ? setExistAddress(true) : setExistAddress(false)} />
+                            {existUser ?
+                                <>
+                                    <Label>Apakah pelanggan alamat tersimpan?</Label>
+                                    <Switch defaultChecked={existAddress} onClick={() => existAddress == false ? setExistAddress(true) : setExistAddress(false)} />
+                                </>
+                                :
+                                <></>
+                            }
                             {existUser == true && existAddress == true ?
-                                <FormField
-                                    control={formOrder.control}
-                                    name="user_address_id"
-                                    render={({ field: { value, onChange, ...fieldProps } }) => (
-                                        <FormItem>
-                                            <FormLabel>Pilih alamat tersimpan user</FormLabel>
-                                            <FormControl>
-                                                <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Pilih alamat pelanggan" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {userSelectedAddress.map((usa) => (
-                                                            <SelectItem value={usa.id.toString()}>{usa.address}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                <>
+                                    <FormField
+                                        control={formOrder.control}
+                                        name="user_address_id"
+                                        render={({ field: { value, onChange, ...fieldProps } }) => (
+                                            <FormItem>
+                                                <FormLabel>Pilih alamat tersimpan user</FormLabel>
+                                                <FormControl>
+                                                    <Select defaultValue={value} {...fieldProps} onValueChange={(e) => {
+                                                        const addrs = userSelectedAddress.find((a) => +e == a.id)
+                                                        Promise.all([
+                                                            onChange(e),
+                                                            setSelectedLocation({
+                                                                lat: addrs?.lat ? +addrs?.lat : 0,
+                                                                lng: addrs?.long ? +addrs?.long : 0
+                                                            }),
+                                                            setAddressB(addrs?.address ?? "")
+                                                        ])
+                                                        console.log(addrs)
+                                                    }}>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Pilih alamat pelanggan" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {userSelectedAddress.map((usa, idxusa) => (
+                                                                <SelectItem value={usa.id.toString()} key={idxusa}>{usa.address}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    {
+                                        distance !== null && fixedLocation &&
+                                        (
+                                            <div className="p-4 bg-gray-100 rounded-md">
+                                                <h3 className="font-medium">Informasi Jarak</h3>
+                                                <p>Lokasi Tetap (Titik A):
+                                                    <span className="font-semibold">Jl. Sekeloa No.11, RT.01/RW.06, Sekeloa, Kecamatan Coblong, Kota Bandung, Jawa Barat 40134</span>
+                                                </p>
+                                                <p>Lokasi Input (Titik B):
+                                                    <span className="font-semibold">{addressB}</span>
+                                                </p>
+                                                <p>Jarak antara Titik A dan Titik B:
+                                                    <span className="font-semibold"> {distance.toFixed(2)} km</span>
+                                                </p>
+                                            </div>
+                                        )
+                                    }
+                                </>
                                 :
                                 <>
                                     <FormField
@@ -323,7 +399,7 @@ const FormOrder = ({
                                             <FormItem>
                                                 <FormLabel>Alamat Baru</FormLabel>
                                                 <FormControl>
-                                                    <Input value={value} {...fieldProps} disabled={readMode} readOnly />
+                                                    <Input value={value} {...fieldProps} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -336,7 +412,7 @@ const FormOrder = ({
                                             <FormItem>
                                                 <FormLabel>Latitude</FormLabel>
                                                 <FormControl>
-                                                    <Input value={value} {...fieldProps} disabled={readMode} readOnly />
+                                                    <Input value={value} {...fieldProps} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -349,7 +425,7 @@ const FormOrder = ({
                                             <FormItem>
                                                 <FormLabel>Longitude</FormLabel>
                                                 <FormControl>
-                                                    <Input value={value} {...fieldProps} disabled={readMode} readOnly />
+                                                    <Input value={value} {...fieldProps} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -366,26 +442,29 @@ const FormOrder = ({
                                                 <Input type="text" className="w-full" placeholder="Search for an address" />
                                             </GoogleAutocomplete>
                                             {/* Button to get Current Location */}
-                                            <Button type="button" onClick={handleLocationClick} disabled={readMode}>
+                                            <Button type="button" onClick={handleLocationClick}>
                                                 <i className="fa-solid fa-crosshairs"></i>
                                             </Button>
                                         </div>
                                     </div>
 
-                                    {distance !== null && fixedLocation && (
-                                        <div className="p-4 bg-gray-100 rounded-md">
-                                            <h3 className="font-medium">Informasi Jarak</h3>
-                                            <p>Lokasi Tetap (Titik A):
-                                                <span className="font-semibold">Jl. Sekeloa No.11, RT.01/RW.06, Sekeloa, Kecamatan Coblong, Kota Bandung, Jawa Barat 40134</span>
-                                            </p>
-                                            <p>Lokasi Input (Titik B):
-                                                <span className="font-semibold">{formOrder.getValues("custom_address")}</span>
-                                            </p>
-                                            <p>Jarak antara Titik A dan Titik B:
-                                                <span className="font-semibold"> {distance.toFixed(2)} km</span>
-                                            </p>
-                                        </div>
-                                    )}
+                                    {
+                                        distance !== null && fixedLocation &&
+                                        (
+                                            <div className="p-4 bg-gray-100 rounded-md">
+                                                <h3 className="font-medium">Informasi Jarak</h3>
+                                                <p>Lokasi Tetap (Titik A):
+                                                    <span className="font-semibold">Jl. Sekeloa No.11, RT.01/RW.06, Sekeloa, Kecamatan Coblong, Kota Bandung, Jawa Barat 40134</span>
+                                                </p>
+                                                <p>Lokasi Input (Titik B):
+                                                    <span className="font-semibold">{addressB}</span>
+                                                </p>
+                                                <p>Jarak antara Titik A dan Titik B:
+                                                    <span className="font-semibold"> {distance.toFixed(2)} km</span>
+                                                </p>
+                                            </div>
+                                        )
+                                    }
 
                                     <div className="w-full h-[30rem]">
                                         <GoogleMap
@@ -406,7 +485,6 @@ const FormOrder = ({
                         </div>
                     </div>
                     <div className="w-full space-y-3">
-                        {/*  */}
                         <FormField
                             control={formOrder.control}
                             name="shoe_name"
@@ -414,7 +492,7 @@ const FormOrder = ({
                                 <FormItem>
                                     <FormLabel>Nama Sepatu</FormLabel>
                                     <FormControl>
-                                        <Input value={value} {...fieldProps} disabled={readMode} readOnly={readMode} />
+                                        <Input value={value} {...fieldProps} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -432,8 +510,8 @@ const FormOrder = ({
                                                 <SelectValue placeholder="Jenis sepatu yang dipilih" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {shoe_type_options.map((st) => (
-                                                    <SelectItem value={st.id.toString()}>{st.name}</SelectItem>
+                                                {shoe_type_options.map((st, idxst) => (
+                                                    <SelectItem value={st.id.toString()} key={idxst}>{st.name}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -455,7 +533,7 @@ const FormOrder = ({
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {treatment_options.map((treatment) => (
-                                                    <SelectItem value={treatment.id.toString()}>{treatment.name}</SelectItem>
+                                                    <SelectItem value={treatment.id.toString()} key={treatment.slug}>{treatment.name}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -486,9 +564,9 @@ const FormOrder = ({
                         <div className="flex flex-col mt-4 p-3 space-y-3">
                             <h2 className="text-xl font-bold">List Order</h2>
                             {orderDetail.length > 0 ?
-                                orderDetail.map((od) =>
+                                orderDetail.map((od, idxod) =>
                                 (
-                                    <Card>
+                                    <Card key={idxod}>
                                         <CardHeader>
                                             <CardTitle>Nama Sepatu : {od.shoe_name}</CardTitle>
                                             <CardAction>
@@ -498,9 +576,9 @@ const FormOrder = ({
                                             </CardAction>
                                         </CardHeader>
                                         <CardContent className="flex flex-col">
-                                            <span>Jenis Sepatu : {shoe_type_options.find((st => +od.shoe_type_id == st.id))?.name}</span>
-                                            <span>Treatment yang dipilih : {treatment_options.find((t => +od.treatment_id == t.id))?.name}</span>
-                                            <span>Harga : Rp. {Intl.NumberFormat('id-ID').format(treatment_options.find((t => +od.treatment_id == t.id))?.price)}</span>
+                                            <span>Jenis Sepatu : {findShoeTypeById(+od.shoe_type_id)?.name}</span>
+                                            <span>Treatment yang dipilih : {findTreatmentById(+od.treatment_id)?.name}</span>
+                                            <span>Harga : Rp. {Intl.NumberFormat('id-ID').format(findTreatmentById(+od.treatment_id)?.price as unknown as number)}</span>
                                         </CardContent>
                                     </Card>
                                 ))
@@ -509,7 +587,8 @@ const FormOrder = ({
                             }
                             {orderDetail.length > 0 &&
                                 <>
-                                    <span>Total Harga : Rp. {Intl.NumberFormat('id-ID').format(totalPrice)}</span>
+                                    <span>Ongkir : Rp. {Intl.NumberFormat('id-ID').format(shipping)}</span>
+                                    <span>Total Harga : Rp. {Intl.NumberFormat('id-ID').format(totalPrice + shipping)}</span>
                                     <Button variant={'outline'} className="bg-green-500 hover:bg-green-600 text-white hover:text-white" disabled={formOrder.formState.isSubmitting}>
                                         Checkout Sekarang!
                                     </Button>

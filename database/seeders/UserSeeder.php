@@ -37,6 +37,13 @@ class UserSeeder extends Seeder
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "pelanggan"
             ],
+            (object)[
+                "name" => "Pelanggan 2",
+                "email" => "pelanggan2@gianshoemaker.id",
+                "phone" => "08352834",
+                "avatar" => "/profiles/default-avatar.jpg",
+                "role" => "pelanggan"
+            ],
         ];
         foreach ($roles as $role) {
             Role::create([

@@ -16,9 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->string('label');
             $table->text('address');
-            $table->decimal('lat')->nullable();
-            $table->decimal('long')->nullable();
-            $table->decimal('distance')->nullable();
+            $table->string('lat')->nullable();
+            $table->string('long')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

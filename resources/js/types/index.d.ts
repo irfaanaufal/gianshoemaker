@@ -37,6 +37,7 @@ export interface User {
     email: string;
     avatar?: string;
     address?: UserAddress[];
+    phone?: string;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
@@ -93,11 +94,13 @@ export interface Order {
     user_address_id: number;
     user_address: UserAddress;
     custom_user?: string;
+    custom_phone?: string;
     custom_address?: string;
     custom_lat?: string;
     custom_long?: string;
-    status: "pending" | "processing" | "delivered" | "complete";
+    status: 'belum diambil' | 'pending' | 'pencucian' | 'pengeringan' | 'siap dikirim/diambil' | 'dalam perjalanan' | 'selesai';
     payment_status: "unpaid" | "paid";
+    service_method: 'antar jemput' | 'antar' | 'pickup';
     distance_km: number;
     delivery_fee: number;
 }

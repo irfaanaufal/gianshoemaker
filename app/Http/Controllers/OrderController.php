@@ -34,9 +34,11 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         $role = $user->getRoleNames();
-        $orders = new Order;
-        if ($role[0] == "pelanggan") {
-            $orders->where(['user_id', $user->id]);
+
+        $orders = Order::query();
+
+        if ($role->contains("pelanggan")) {
+            $orders->where('user_id', $user->id);
         }
 
         return Inertia::render('order/page', [
@@ -52,7 +54,7 @@ class OrderController extends Controller
     {
         return Inertia::render('order/create', [
             "title" => "GIANSHOEMAKER | Tambah Order",
-            "users" => User::whereHas('roles', function($query) {
+            "users" => User::whereHas('roles', function ($query) {
                 $query->whereIn('roles.name', ['pelanggan']);
             })->with('address')->get(),
             "shoe_types" => ShoeType::all(),
@@ -68,32 +70,42 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         try {
-            $custom = (object)[
+            $custom = [
                 "name" => $request->custom_user,
                 "address" => $request->custom_address,
                 "email" => "example@gmail.com"
             ];
 
+            $address = [];
             // Handle both registered and guest users
-            $user = $request->user_id ? User::find($request->user_id) : $custom;
-            $address = $request->user_address_id ? UserAddress::find($request->user_address_id) : $custom->address;
+            if ($request->user_address_id) {
+                $address = UserAddress::find($request->user_address_id);
+            }
+
+            $user = [];
+            if ($request->user_id) {
+                $user = User::find($request->user_id);
+            }
 
             $data = [
                 "order_id" => $this->generateTrx(),
                 "gross_amount" => $request->total_price,
-                "first_name" => $user ? $user->name : $request->custom_user,
-                "address" => $address ? $address->address : $request->custom_address,
-                "email" => $user ? $user->email : $custom->email,
+                "first_name" => $user ? $user['name'] : $custom['name'],
+                "address" => $address ? $address['address'] : $custom['address'],
+                "email" => $user ? $user['email'] : $custom['email'],
                 "order_details" => $request->order_details,
             ];
 
             $addon_data = [
-                "user_id" => $user ? $user->id : null,
-                "user_address_id" => $address ? $address->id : null,
+                "user_id" => $user ? $user['id'] : null,
+                "user_address_id" => $address ? $address['id'] : null,
                 "custom_user" => $request->custom_user,
                 "custom_lat" => $request->custom_lat,
                 "custom_long" => $request->custom_long,
-                "custom_address" => $request->custom_address
+                "custom_address" => $request->custom_address,
+                "service_method" => $request->service_method,
+                "distance_km" => $request->distance_km,
+                "delivery_fee" => $request->delivery_fee
             ];
 
             // Create Midtrans token
@@ -115,7 +127,6 @@ class OrderController extends Controller
                 "addon_order" => $addon_data,
                 "order_details" => $newOrderDetails
             ], 200);
-
         } catch (\Exception $e) {
             \Log::error('Order creation failed: ' . $e->getMessage());
             return response()->json([
@@ -125,10 +136,7 @@ class OrderController extends Controller
         }
     }
 
-    public function store_user_mode(Request $request)
-    {
-
-    }
+    public function store_user_mode(Request $request) {}
 
     public function callback(Request $request)
     {
@@ -136,12 +144,16 @@ class OrderController extends Controller
             "trx" => $request->order["order_id"],
             "user_id" => $request->addon_order["user_id"] ?? null,
             "user_address_id" => $request->addon_order["user_address_id"] ?? null,
-            "address" => $request->order["address"] ?? null,
+            "custom_address" => $request->order["address"] ?? null,
             "custom_user" => $request->addon_order["custom_user"] ?? null,
             "custom_lat" => $request->addon_order["custom_lat"] ?? null,
             "custom_long" => $request->addon_order["custom_long"] ?? null,
+            "status" => $request->addon_order["service_method"] == "antar jemput" ? "belum diambil" : "pending",
             "payment_status" => "paid",
-            "grand_total" => $request->order["gross_amount"] ?? 0
+            "grand_total" => $request->order["gross_amount"] ?? 0,
+            "distance_km" => $request->addon_order["distance_km"] ?? 0,
+            "delivery_fee" => $request->addon_order["delivery_fee"] ?? 0,
+            "service_method" => $request->addon_order["service_method"] ?? null
         ]);
         foreach ($request->order_details as $od) {
             $trx->order_details()->create($od);

@@ -16,7 +16,7 @@ class TrackingController extends Controller
     {
         return Inertia::render("tracking/page", [
             "title" => "Tracking Order",
-            "orders" => Order::with(['order_details', 'user', 'user_address'])->where('status', '!=', 'pending')->get()
+            "orders" => Order::with(['order_details', 'user', 'user_address'])->where('status', '!=', 'selesai')->get()
         ]);
     }
 

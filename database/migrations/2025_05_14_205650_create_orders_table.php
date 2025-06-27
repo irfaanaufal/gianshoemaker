@@ -21,11 +21,12 @@ return new class extends Migration
             $table->text('custom_address')->nullable();
             $table->string('custom_lat')->nullable();
             $table->string('custom_long')->nullable();
-            $table->enum('status', ['pending', 'processing', 'delivered', 'complete'])->default('pending');
+            $table->enum('service_method', ['antar jemput', 'antar', 'pickup'])->nullable();
+            $table->enum('status', ['belum diambil', 'pending', 'pencucian', 'pengeringan', 'siap dikirim/diambil', 'dalam perjalanan', 'selesai'])->default('pending');
             $table->enum('payment_status', ['unpaid', 'paid'])->default('unpaid');
             $table->double('grand_total')->nullable();
             $table->decimal('distance_km')->nullable();
-            $table->decimal('delivery_fee')->default(0);
+            $table->double('delivery_fee')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

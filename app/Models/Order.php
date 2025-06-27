@@ -16,6 +16,7 @@ class Order extends Model
         'user_id',
         'user_address_id',
         'custom_user',
+        'custom_phone',
         'custom_address',
         'custom_lat',
         'custom_long',
@@ -23,6 +24,7 @@ class Order extends Model
         'payment_status',
         'distance_km',
         'delivery_fee',
+        'service_method'
     ];
 
     public function order_details(): HasMany
