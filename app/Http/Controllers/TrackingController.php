@@ -14,9 +14,13 @@ class TrackingController extends Controller
      */
     public function index(): Response
     {
+        $data = Order::whereIn('service_method', ['antar jemput', 'antar'])
+            ->whereIn('status', ['belum diambil', 'siap dikirim/diambil', 'dalam perjalanan'])
+            ->get();
+
         return Inertia::render("tracking/page", [
             "title" => "Tracking Order",
-            "orders" => Order::with(['order_details', 'user', 'user_address'])->where('status', '!=', 'selesai')->get()
+            "orders" => $data
         ]);
     }
 

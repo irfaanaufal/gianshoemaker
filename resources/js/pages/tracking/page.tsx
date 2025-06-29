@@ -2,7 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import HeadingSmall from '@/components/heading-small';
 import { Order, UserAddress, type BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/app-layout';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { GoogleMap, Marker, Autocomplete, useJsApiLoader } from "@react-google-maps/api";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/drawer"
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { api } from '@/lib/utils';
+import { toast } from 'sonner';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -48,6 +50,44 @@ export default function PageTracking({
         const url = `https://www.google.com/maps?q=${data.lat},${data.lng}`;
         window.open(url, "_blank"); // Membuka URL di tab baru
     };
+
+    const handleClick = async (status: string, row: Order) => {
+        try {
+            const response = await api.post(route('order.update', { order: row }), { status: status, _method: "put" });
+            if (response.status == 201) {
+                toast(response.data.message);
+            }
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        } catch (error) {
+            console.log(`Error : `, error);
+        }
+    }
+
+    const buttonUpdate = (status: string, row: Order): ReactNode | undefined => {
+        let nextStatus: string = "";
+        if (status == 'belum diambil') {
+            nextStatus = "pending";
+        }
+        if (status == 'pending') {
+            nextStatus = "pencucian";
+        }
+        if (status == 'pencucian') {
+            nextStatus = "pengeringan";
+        }
+        if (status == 'pengeringan') {
+            nextStatus = "siap dikirim/diambil";
+        }
+        if (status == 'siap dikirim/diambil') {
+            nextStatus = "dalam perjalanan";
+        }
+        if (status == 'dalam perjalanan') {
+            nextStatus = "selesai";
+        }
+        return status == 'selesai' ? <></> :
+            <Button className="bg-yellow-500 hover:bg-yellow-600 rounded-full" onClick={() => handleClick(nextStatus, row)}>UPDATE {nextStatus.toUpperCase()}</Button>
+    }
 
     if (!isLoaded) return <div>Loading...</div>;
 
@@ -81,7 +121,7 @@ export default function PageTracking({
                             <Card key={r.trx}>
                                 <CardHeader>
                                     <CardTitle>No : {r.trx} ({r.user ? r.user.name : r.custom_user})</CardTitle>
-                                    <CardDescription>{r.user_address? r.user_address.address : r.custom_address}</CardDescription>
+                                    <CardDescription>{r.user_address ? r.user_address.address : r.custom_address}</CardDescription>
                                     <CardAction className="flex gap-2">
                                         <Button onClick={() => {
                                             const lat = r.custom_lat ? +r.custom_lat : +r.user_address.lat;
@@ -99,7 +139,7 @@ export default function PageTracking({
                                     <span>longitude : {r?.user_address?.long}</span>
                                 </CardContent>
                                 <CardFooter>
-                                    {/* <p>Card Footer</p> */}
+                                    {buttonUpdate(r.status, r)}
                                 </CardFooter>
                             </Card>
                         )
@@ -139,9 +179,9 @@ const DetailOrder = ({
                     <div className="flex flex-col space-y-2 px-4 mb-[1rem]">
                         <Label className="text-md">Diantar Ke :</Label>
                         <p className="text-md font-bold">{order.user_address ? order.user_address.address : order.custom_address}</p>
-                        <Link href={`https://www.google.com/maps?q=${order.user_address ? order.user_address.lat : order.custom_lat},${order.user_address ? order.user_address.long : order.custom_long}`} target="_blank">
+                        <a href={`https://www.google.com/maps?q=${order.user_address ? order.user_address.lat : order.custom_lat},${order.user_address ? order.user_address.long : order.custom_long}`} target="_blank">
                             <Button className="rounded-full">Lihat Lokasi</Button>
-                        </Link>
+                        </a>
                     </div>
                 }
                 <div className="flex flex-col space-y-2 px-4 mb-[1rem]">

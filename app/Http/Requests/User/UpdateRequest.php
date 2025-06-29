@@ -25,7 +25,7 @@ class UpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string'],
-            'email' => ['required', 'string', Rule::unique(User::class)],
+            'email' => ['required', 'string'],
             'phone' => ['required', 'numeric', 'max_digits:18'],
             'role' => ['required', 'string']
         ];

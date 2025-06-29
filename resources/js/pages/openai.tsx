@@ -8,9 +8,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/utils';
-import { Separator } from '../components/ui/separator';
+import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { TreatmentCard } from '../components/ui/treatment-card';
+import { TreatmentCard } from '@/components/ui/treatment-card';
+import Header from '../components/header';
 interface OpenAi {
     dirtiness_level: string;
     is_yellowing: boolean;
@@ -28,7 +29,6 @@ export default function OpenAITreatment({
     const [imagePath, setImagePath] = useState<string>("/assets/no-img.jpg");
     const [loading, setLoading] = useState<boolean | undefined>(undefined);
     const [openaiRes, setOpenaiRes] = useState<OpenAi>();
-    const [openaiRes1, setOpenaiRes1] = useState<string>("");
     const schemaOpenAi = z.object({
         image: z.instanceof(File)
             .refine(file => ['image/png', 'image/jpg', 'image/jpeg'].includes(file.type), {
@@ -50,7 +50,6 @@ export default function OpenAITreatment({
             if (response.status == 201) {
                 setLoading(false);
                 setOpenaiRes(response.data);
-                // setOpenaiRes1(response.data.feedback);
             }
         } catch (error) {
             console.log(error);
@@ -72,36 +71,10 @@ export default function OpenAITreatment({
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
             </Head>
             <div className="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]">
-                <header className="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl">
-                    <nav className="flex items-center justify-end gap-4">
-                        {auth.user ? (
-                            <Link
-                                href={route('dashboard')}
-                                className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                            >
-                                Dashboard
-                            </Link>
-                        ) : (
-                            <>
-                                <Link
-                                    href={route('login')}
-                                    className="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
-                                >
-                                    Log in
-                                </Link>
-                                <Link
-                                    href={route('register')}
-                                    className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                                >
-                                    Register
-                                </Link>
-                            </>
-                        )}
-                    </nav>
-                </header>
+                <Header />
 
                 {/* Section OpenAI */}
-                <div className="flex flex-col w-full md:w-1/2 lg:w-1/2 h-screen justify-start items-center mb-[2rem] p-3 space-y-3">
+                <div className="flex flex-col w-full md:w-1/2 lg:w-1/2 h-screen justify-start items-center mb-[2rem] p-3 space-y-3 mt-[2rem]">
                     <div className="flex flex-col">
                         <h1 className="text-4xl font-bold text-center mb-3 dark:text-white">
                             AI Rekomendasi Treatment
@@ -152,10 +125,10 @@ export default function OpenAITreatment({
                                 <Separator />
                                 <span>Level Kekotoran Sepatu : <strong>{openaiRes?.dirtiness_level.toUpperCase()}</strong></span>
                                 {openaiRes?.is_yellowing && <span>Membutuhkan treatment tambahan : <strong>Ya</strong></span>}
-                                <span>Rekomendasi Treatment : <strong>{openaiRes?.treatment?.name.toUpperCase()}</strong></span>
                                 <span>Alasan : </span>
                                 <br />
                                 <div dangerouslySetInnerHTML={{ __html: openaiRes?.reason }} />
+                                <span>Rekomendasi Treatment : <strong>{openaiRes?.treatment?.name.toUpperCase()}</strong></span>
                                 <Separator />
                                 <h3 className="text-xl font-bold text-center">Rekomendasi Treatment</h3>
                                 <Card className={`w-[15rem] p-3 mb-[1rem] mx-auto`}>
@@ -172,16 +145,6 @@ export default function OpenAITreatment({
                                 </Card>
                             </div>
                         }
-                        {/*
-                        {
-                            openaiRes1
-                            &&
-                            <div className="flex flex-col space-y-3">
-                                <h3 className="text-xl font-medium">Response GPT:</h3>
-                                <p>{openaiRes1}</p>
-                            </div>
-                        }
-                         */}
                     </Form>
                 </div>
                 <div className="hidden h-14.5 lg:block"></div>

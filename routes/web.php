@@ -9,6 +9,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\TreatmentController;
 use App\Http\Controllers\UserAddressController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -48,6 +49,7 @@ Route::middleware('auth')->group(function() {
     });
 
     // Static Route
+    Route::get('/user/list', [UserController::class, 'index'])->name('user.index');
     Route::get('/menu/list', [MenuController::class, 'index'])->name('menu.index');
     Route::get('/treatment/list', [TreatmentController::class, 'index'])->name('treatment.index');
     Route::get('/order/list', [OrderController::class, 'dashboard'])->name('order.index');
@@ -57,6 +59,7 @@ Route::middleware('auth')->group(function() {
     Route::post('/order/callback', [OrderController::class, 'callback'])->name('order.callback');
 
     // Dynamic Route
+    Route::resource('user', UserController::class)->except('index');
     Route::resource('menu', MenuController::class)->except('index');
     Route::resource('treatment', TreatmentController::class)->except('index');
     Route::resource('order', OrderController::class)->except('index');

@@ -123,8 +123,8 @@ const PageOrder = ({
                                 {
                                     user_login.roles[0].name != "pelanggan" ?
                                         <>
-                                            {buttonUpdate(row.status, row)}
                                             <DetailOrder order={row} />
+                                            {['belum diambil', 'siap dikirim/diambil', 'dalam perjalanan'].includes(row.status) ? <></> : buttonUpdate(row.status, row)}
                                         </>
                                         :
                                         <DetailOrder order={row} />
@@ -167,9 +167,9 @@ const DetailOrder = ({
                     <div className="flex flex-col space-y-2 px-4 mb-[1rem]">
                         <Label className="text-md">Diantar Ke :</Label>
                         <p className="text-md font-bold">{order.user_address ? order.user_address.address : order.custom_address}</p>
-                        <Link href={`https://www.google.com/maps?q=${order.user_address ? order.user_address.lat : order.custom_lat},${order.user_address ? order.user_address.long : order.custom_long}`} target="_blank">
+                        <a href={`https://www.google.com/maps?q=${order.user_address ? order.user_address.lat : order.custom_lat},${order.user_address ? order.user_address.long : order.custom_long}`} target="_blank">
                             <Button className="rounded-full">Lihat Lokasi</Button>
-                        </Link>
+                        </a>
                     </div>
                 }
                 <div className="flex flex-col space-y-2 px-4 mb-[1rem]">
