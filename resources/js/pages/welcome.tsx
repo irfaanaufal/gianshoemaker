@@ -68,16 +68,16 @@ export default function Welcome() {
                             <img src={`/assets/about-us.jpg`} alt="About Us" className="w-full lg:w-[30rem] md:w-[30rem] rounded-xl" />
                         </div>
                         <div className="flex flex-col w-full lg:w-[30rem] md:w-[30rem]">
-                            <h3 className="text-xl mb-[1rem] font-bold">
+                            <h3 className="text-xl mb-[1rem] font-bold dark:text-white">
                                 Selamat Datang di Gianshoemaker
                             </h3>
-                            <p className="text-justify">
+                            <p className="text-justify dark:text-white">
                                 Gianshoemaker adalah premium shoes treatment Indonesia, yang terletak
                                 di Bandung dan telah berdiri sejak 2018 untuk melayani laundry sepatu,
                                 Standart Treatment, dan treatment sepatu lainnya.
                             </p>
                             <br />
-                            <p className="text-justify">
+                            <p className="text-justify dark:text-white">
                                 Shoes Clean hadir dengan pengalaman lebih dari 7 tahun di dunia cuci
                                 sepatu Indonesia, melayani perawatan sepatu seperti Express Treatment,
                                 unyellowing Treatment, hingga Extra treatment, yang dikerjakan oleh para

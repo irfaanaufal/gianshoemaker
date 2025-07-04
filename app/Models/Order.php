@@ -20,9 +20,13 @@ class Order extends Model
         'custom_address',
         'custom_lat',
         'custom_long',
+        'custom_address_pickup',
+        'custom_lat_pickup',
+        'custom_long_pickup',
         'status',
         'payment_status',
         'distance_km',
+        'pickup_distance_km',
         'delivery_fee',
         'service_method'
     ];

@@ -17,8 +17,8 @@ class TreatmentSeeder extends Seeder
         $treatments = [
             (object)[
                 "name" => "Standar Treatment",
-                "price" => 50000,
-                "description" => "Lorem ipsum dolor sit amet consectetur adipisicing elit. Accusantium in doloremque recusandae fugit iusto soluta repellat? Vitae quod odio eligendi debitis ducimus illum fugiat sapiente animi aperiam suscipit, pariatur dicta eaque laborum mollitia officia consequuntur, tempore saepe omnis ea facere. Rem quod minus nobis perferendis laboriosam deleniti nihil voluptates expedita!",
+                "price" => 65000,
+                "description" => "Perawatan pembersihan sepatu secara detail dan menyeluruh pada seluruh bagian.",
                 "picture" => "/assets/galery-14.jpg",
                 "analyze" => 0.5,
                 "is_yellow" => false
@@ -26,32 +26,39 @@ class TreatmentSeeder extends Seeder
             (object)[
                 "name" => "Extra Treatment",
                 "price" => 100000,
-                "description" => "Lorem ipsum dolor sit amet consectetur adipisicing elit. Accusantium in doloremque recusandae fugit iusto soluta repellat? Vitae quod odio eligendi debitis ducimus illum fugiat sapiente animi aperiam suscipit, pariatur dicta eaque laborum mollitia officia consequuntur, tempore saepe omnis ea facere. Rem quod minus nobis perferendis laboriosam deleniti nihil voluptates expedita!",
+                "description" => "Perawatan yang pengerjaannya ditujukan untuk sepatu dengan material-material khusus.",
                 "picture" => "/assets/galery-13.jpg",
                 "analyze" => 0.8,
                 "is_yellow" => false
             ],
             (object)[
                 "name" => "Express Treatment",
-                "price" => 65000,
-                "description" => "Lorem ipsum dolor sit amet consectetur adipisicing elit. Accusantium in doloremque recusandae fugit iusto soluta repellat? Vitae quod odio eligendi debitis ducimus illum fugiat sapiente animi aperiam suscipit, pariatur dicta eaque laborum mollitia officia consequuntur, tempore saepe omnis ea facere. Rem quod minus nobis perferendis laboriosam deleniti nihil voluptates expedita!",
+                "price" => 50000,
+                "description" => "Express Treatment merupakan pencucian instan pada bagian upper dan midsole yang bisa diambil besoknya.",
                 "picture" => "/assets/galery-12.jpg",
                 "analyze" => 0.3,
                 "is_yellow" => false
             ],
             (object)[
-                "name" => "Unyellowing",
-                "price" => 75000,
-                "description" => "Lorem ipsum dolor sit amet consectetur adipisicing elit. Accusantium in doloremque recusandae fugit iusto soluta repellat? Vitae quod odio eligendi debitis ducimus illum fugiat sapiente animi aperiam suscipit, pariatur dicta eaque laborum mollitia officia consequuntur, tempore saepe omnis ea facere. Rem quod minus nobis perferendis laboriosam deleniti nihil voluptates expedita!",
+                "name" => "Unyellowing Treatment",
+                "price" =>  120000 ,
+                "description" => "Perawatan yang dikhususkan untuk midsole sepatu yang telah menguning.",
+                "picture" => "/assets/galery-9.jpg",
+                "analyze" => 0.5,
+                "is_yellow" => true
+            ],
+            (object)[
+                "name" => "Repaint Treatment",
+                "price" =>  75000,
+                "description" => "Perawatan restorasi warna dengan penggunaan cat khusus yang ditujukan untuk mengembalikan warna awal sepatu seperti semula.",
                 "picture" => "/assets/galery-9.jpg",
                 "analyze" => 0.5,
                 "is_yellow" => true
             ],
         ];
-        foreach ($treatments as $key => $treatment) {
+        foreach ($treatments as $treatment) {
             Treatment::create([
                 'name' => $treatment->name,
-                'slug' => Str::slug($treatment->name),
                 'price' => $treatment->price,
                 'description' => $treatment->description,
                 'picture' => $treatment->picture,

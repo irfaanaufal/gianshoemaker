@@ -152,10 +152,15 @@ const FormOrderPelanggan = ({
             shoe_type_id: shoe_type_id,
             recent_price: +currT
         };
-        setOrderDetail(prev => [...prev, newOrderDetail]),
+        setOrderDetail(prev => [...prev, newOrderDetail])
+        const service_method = formOrder.getValues("service_method");
+        if (service_method == "antar jemput") {
+            setShipping(calculateShippingPrice(distance ?? 0, orderDetail.length));
+        } else {
+            setShipping(0);
+        }
         setShipping(calculateShippingPrice(distance ?? 0, orderDetail.length))
         setTotalPrice(newPrice);
-        // currentInputFile.current!.value = "";
     };
 
     const findAddressById = (id: number | string): UserAddress | null => {
@@ -244,30 +249,6 @@ const FormOrderPelanggan = ({
                 <div className="flex lg:flex-row md:flex-row flex-col w-full gap-3">
                     <div className="w-full space-y-3">
                         <div className="flex flex-col space-y-3">
-                            <FormField
-                                control={formOrder.control}
-                                name="service_method"
-                                render={({ field: { value, onChange, ...fieldProps } }) => (
-                                    <FormItem>
-                                        <FormLabel>Pilih jenis pelayanan</FormLabel>
-                                        <FormControl>
-                                            <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Pilih jenis pelayanan" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {['antar jemput', 'antar', 'pickup'].map((jp, idxjp) => (
-                                                        <SelectItem value={jp} key={idxjp}>{jp.toUpperCase()}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <div className="flex flex-col space-y-3">
                             <Label>Apakah kamu memiliki alamat tersimpan?</Label>
                             <Switch defaultChecked={existAddress} onClick={() => existAddress == false ? setExistAddress(true) : setExistAddress(false)} />
                             {existAddress == true ?
@@ -321,6 +302,38 @@ const FormOrderPelanggan = ({
                                                 </p>
                                             </div>
                                         )
+                                    }
+                                    {
+                                        distance &&
+                                        <FormField
+                                            control={formOrder.control}
+                                            name="service_method"
+                                            render={({ field: { value, onChange, ...fieldProps } }) => (
+                                                <FormItem>
+                                                    <FormLabel>Pilih jenis pelayanan</FormLabel>
+                                                    <FormControl>
+                                                        <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue placeholder="Pilih jenis pelayanan" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {
+                                                                    distance !== null && distance < 10 &&
+                                                                    ['antar jemput', 'antar', 'pickup'].map((jp, idxjp) => (
+                                                                        <SelectItem value={jp} key={idxjp}>{jp.toUpperCase()}</SelectItem>
+                                                                    ))
+                                                                }
+                                                                {
+                                                                    distance !== null && distance >= 10 &&
+                                                                    <SelectItem value={`pickup`}>PICKUP</SelectItem>
+                                                                }
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
                                     }
                                 </>
                                 :
@@ -397,6 +410,39 @@ const FormOrderPelanggan = ({
                                                 </p>
                                             </div>
                                         )
+                                    }
+
+                                    {
+                                        distance &&
+                                        <FormField
+                                            control={formOrder.control}
+                                            name="service_method"
+                                            render={({ field: { value, onChange, ...fieldProps } }) => (
+                                                <FormItem>
+                                                    <FormLabel>Pilih jenis pelayanan</FormLabel>
+                                                    <FormControl>
+                                                        <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue placeholder="Pilih jenis pelayanan" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {
+                                                                    distance !== null && distance < 10 &&
+                                                                    ['antar jemput', 'antar', 'pickup'].map((jp, idxjp) => (
+                                                                        <SelectItem value={jp} key={idxjp}>{jp.toUpperCase()}</SelectItem>
+                                                                    ))
+                                                                }
+                                                                {
+                                                                    distance !== null && distance >= 10 &&
+                                                                    <SelectItem value={`pickup`}>PICKUP</SelectItem>
+                                                                }
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
                                     }
 
                                     <div className="w-full h-[30rem]">

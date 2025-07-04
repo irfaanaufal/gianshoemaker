@@ -103,8 +103,12 @@ class OrderController extends Controller
                 "custom_lat" => $request->custom_lat,
                 "custom_long" => $request->custom_long,
                 "custom_address" => $request->custom_address,
+                "custom_lat_pickup" => $request->custom_lat_pickup ?? $request->custom_lat,
+                "custom_long_pickup" => $request->custom_long_pickup ?? $request->custom_long,
+                "custom_address_pickup" => $request->custom_address_pickup ?? $request->custom_address,
                 "service_method" => $request->service_method,
                 "distance_km" => $request->distance_km,
+                "pickup_distance_km" => $request->pickup_distance_km ?? $request->distance_km,
                 "delivery_fee" => $request->delivery_fee
             ];
 
@@ -144,14 +148,18 @@ class OrderController extends Controller
             "trx" => $request->order["order_id"],
             "user_id" => $request->addon_order["user_id"] ?? null,
             "user_address_id" => $request->addon_order["user_address_id"] ?? null,
-            "custom_address" => $request->order["address"] ?? null,
             "custom_user" => $request->addon_order["custom_user"] ?? null,
+            "custom_address" => $request->order["address"] ?? null,
             "custom_lat" => $request->addon_order["custom_lat"] ?? null,
             "custom_long" => $request->addon_order["custom_long"] ?? null,
+            "custom_address_pickup" => $request->order["custom_address_pickup"] ?? $request->order["address"],
+            "custom_lat_pickup" => $request->addon_order["custom_lat_pickup"] ?? $request->addon_order["custom_lat"],
+            "custom_long_pickup" => $request->addon_order["custom_long_pickup"] ?? $request->addon_order["custom_long"],
             "status" => $request->addon_order["service_method"] == "antar jemput" ? "belum diambil" : "pending",
             "payment_status" => "paid",
             "grand_total" => $request->order["gross_amount"] ?? 0,
             "distance_km" => $request->addon_order["distance_km"] ?? 0,
+            "pickup_distance_km" => $request->addon_order["pickup_distance_km"] ?? 0,
             "delivery_fee" => $request->addon_order["delivery_fee"] ?? 0,
             "service_method" => $request->addon_order["service_method"] ?? null
         ]);

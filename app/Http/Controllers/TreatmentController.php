@@ -51,7 +51,6 @@ class TreatmentController extends Controller
     {
         DB::transaction(function() use($request) {
             $validated = $request->validated();
-            $validated['slug'] = Str::slug($validated['name']);
             if ($request->hasFile('picture')) {
                 $validated['picture'] = "/storage/" . $request->file('picture')->store('treatments');
             }
@@ -93,7 +92,6 @@ class TreatmentController extends Controller
     {
         DB::transaction(function() use($request, $treatment) {
             $validated = $request->validated();
-            $validated['slug'] = Str::slug($validated['name']);
             $validated['picture'] = $request->hasFile('picture') ? "/storage/" . $request->file('picture')->store('treatments') : $treatment->picture;
             $treatment->update($validated);
         });
