@@ -50,7 +50,6 @@ const PageOrder = ({
                     <Badge className={`px-3 py-1 text-md font-bold rounded-full`}>{row.status.toUpperCase()}</Badge>
                 )
             }
-
         },
         {
             key: "payment_status",
@@ -179,6 +178,12 @@ const DetailOrder = ({
                 <div className="flex flex-col space-y-2 px-4 mb-[1rem]">
                     <Label className="text-md">Status Pembayaran :</Label>
                     <Badge className={`px-3 py-1 text-md font-bold rounded-full ${order.payment_status == 'paid' ? 'bg-green-500' : 'bg-yellow-400'}`}>{order.payment_status.toUpperCase()}</Badge>
+                </div>
+                <div className="flex flex-col space-y-2 px-4 mb-[1rem]">
+                    <Label className="text-md">Detail Order :</Label>
+                    {order?.order_details?.map((od, idxod) => (
+                        <Badge className={`px-3 py-1 text-md font-bold rounded-full bg-blue-500`}>{od.shoe_name} | {od?.treatment?.name}</Badge>
+                    ))}
                 </div>
                 <Separator className="mb-[1rem]" />
                 <div className="flex flex-col space-y-2 px-4 mb-[1rem]">

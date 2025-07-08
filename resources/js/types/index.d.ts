@@ -103,6 +103,7 @@ export interface Order {
     service_method: 'antar jemput' | 'antar' | 'pickup';
     distance_km: number;
     delivery_fee: number;
+    order_details: OrderDetail[];
 }
 
 export interface OrderDetail {
@@ -114,5 +115,6 @@ export interface OrderDetail {
     picture_after?: string;
     shoe_name: string;
     recent_price?: number;
+    treatment?: Treatment;
     [key: string]: unknown;
 }

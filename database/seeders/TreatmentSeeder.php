@@ -17,7 +17,7 @@ class TreatmentSeeder extends Seeder
         $treatments = [
             (object)[
                 "name" => "Standar Treatment",
-                "price" => 65000,
+                "price" => 50000,
                 "description" => "Perawatan pembersihan sepatu secara detail dan menyeluruh pada seluruh bagian.",
                 "picture" => "/assets/galery-14.jpg",
                 "analyze" => 0.5,
@@ -33,7 +33,7 @@ class TreatmentSeeder extends Seeder
             ],
             (object)[
                 "name" => "Express Treatment",
-                "price" => 50000,
+                "price" => 65000,
                 "description" => "Express Treatment merupakan pencucian instan pada bagian upper dan midsole yang bisa diambil besoknya.",
                 "picture" => "/assets/galery-12.jpg",
                 "analyze" => 0.3,

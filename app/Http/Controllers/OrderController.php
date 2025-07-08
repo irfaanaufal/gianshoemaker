@@ -43,7 +43,7 @@ class OrderController extends Controller
 
         return Inertia::render('order/page', [
             "title" => "GIANSHOEMAKER | Order List",
-            "orders" => $orders->with(['order_details', 'user', 'user_address'])->get()
+            "orders" => $orders->with(['order_details.treatment', 'user', 'user_address'])->get()
         ]);
     }
 

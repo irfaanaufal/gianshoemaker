@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -35,8 +35,8 @@ class Treatment extends Model
     ];
 
 
-    public function order_details(): HasMany
+    public function order_details(): HasOne
     {
-        return $this->hasMany(OrderDetail::class);
+        return $this->hasOne(OrderDetail::class);
     }
 }

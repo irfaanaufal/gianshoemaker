@@ -34,6 +34,10 @@ interface DataTableProps<T> {
   actions?: (row: T) => React.ReactNode;
 }
 
+function getNestedValue(obj: any, path: string) {
+  return path.split('.').reduce((acc, part) => acc?.[part], obj);
+}
+
 export function DataTable<T extends { [key: string]: any }>({
   data,
   columns,
@@ -43,7 +47,7 @@ export function DataTable<T extends { [key: string]: any }>({
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [sortKey, setSortKey] = useState<keyof T | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
-  const [searchKey, setSearchKey] = useState<keyof T>(columns[0].key);
+  const [searchKey, setSearchKey] = useState<keyof T | string>(columns[0].key);
   const [searchValue, setSearchValue] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [columnsVisible, setColumnsVisible] = useState<Set<keyof T>>(new Set(columns.map(col => col.key)));
@@ -59,7 +63,7 @@ export function DataTable<T extends { [key: string]: any }>({
 
   const filtered = useMemo(() => {
     return data.filter(row => {
-      const value = row[searchKey];
+      const value = getNestedValue(row, String(searchKey));
       return String(value).toLowerCase().includes(searchValue.toLowerCase());
     });
   }, [data, searchKey, searchValue]);
