@@ -25,7 +25,8 @@ return new class extends Migration
             $table->string('custom_lat_pickup')->nullable();
             $table->string('custom_long_pickup')->nullable();
             $table->enum('service_method', ['antar jemput', 'antar', 'pickup'])->nullable();
-            $table->enum('status', ['belum diambil', 'pending', 'pencucian', 'pengeringan', 'siap dikirim/diambil', 'dalam perjalanan', 'selesai'])->default('pending');
+            // ['belum diambil', 'pending', 'pencucian', 'pengeringan', 'siap dikirim/diambil', 'dalam perjalanan', 'selesai']
+            $table->enum('status', ['siap diambil', 'sudah diambil', 'pending', 'pencucian', 'pengeringan', 'siap dikirim', 'dalam perjalanan (ambil)', 'dalam perjalanan (antar)', 'selesai'])->default('pending');
             $table->enum('payment_status', ['unpaid', 'paid'])->default('unpaid');
             $table->double('grand_total')->nullable();
             $table->decimal('distance_km')->nullable();

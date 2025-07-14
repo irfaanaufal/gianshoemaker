@@ -77,23 +77,20 @@ const PageOrder = ({
 
     const buttonUpdate = (status: string, row: Order): ReactNode | undefined => {
         let nextStatus: string = "";
-        if (status == 'belum diambil') {
-            nextStatus = "pending";
+        if (row.service_method == "antar jemput" && status == "pending") {
+            nextStatus = "siap diambil"
         }
-        if (status == 'pending') {
-            nextStatus = "pencucian";
+        if (["antar", "pickup"].includes(row.service_method) && status == "pending") {
+            nextStatus = "pencucian"
         }
-        if (status == 'pencucian') {
-            nextStatus = "pengeringan";
+        if (status == "sudah diambil") {
+            nextStatus = "pencucian"
         }
-        if (status == 'pengeringan') {
-            nextStatus = "siap dikirim/diambil";
+        if (status == "pencucian") {
+            nextStatus = "pengeringan"
         }
-        if (status == 'siap dikirim/diambil') {
-            nextStatus = "dalam perjalanan";
-        }
-        if (status == 'dalam perjalanan') {
-            nextStatus = "selesai";
+        if (status == "pengeringan") {
+            nextStatus = "siap dikirim"
         }
         return status == 'selesai' ? <></> :
             <Button className="bg-yellow-500 hover:bg-yellow-600 rounded-full" onClick={() => handleClick(nextStatus, row)}>UPDATE {nextStatus.toUpperCase()}</Button>
@@ -120,10 +117,10 @@ const PageOrder = ({
                         actions={(row) => (
                             <div className="flex gap-2">
                                 {
-                                    user_login.roles[0].name != "pelanggan" ?
+                                    user_login.roles[0].name == "admin" ?
                                         <>
                                             <DetailOrder order={row} />
-                                            {['belum diambil', 'siap dikirim/diambil', 'dalam perjalanan'].includes(row.status) ? <></> : buttonUpdate(row.status, row)}
+                                            {['siap diambil', 'siap dikirim', 'dalam perjalanan (ambil)', 'dalam perjalanan (antar)', 'selesai'].includes(row.status) ? <></> : buttonUpdate(row.status, row)}
                                         </>
                                         :
                                         <DetailOrder order={row} />

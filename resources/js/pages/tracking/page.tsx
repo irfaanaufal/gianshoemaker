@@ -67,23 +67,17 @@ export default function PageTracking({
 
     const buttonUpdate = (status: string, row: Order): ReactNode | undefined => {
         let nextStatus: string = "";
-        if (status == 'belum diambil') {
-            nextStatus = "pending";
+        if (status == 'siap diambil') {
+            nextStatus = "dalam perjalanan (ambil)";
         }
-        if (status == 'pending') {
-            nextStatus = "pencucian";
+        if (status == 'dalam perjalanan (ambil)') {
+            nextStatus = "sudah diambil";
         }
-        if (status == 'pencucian') {
-            nextStatus = "pengeringan";
+        if (status == "siap dikirim") {
+            nextStatus = "dalam perjalanan (antar)"
         }
-        if (status == 'pengeringan') {
-            nextStatus = "siap dikirim/diambil";
-        }
-        if (status == 'siap dikirim/diambil') {
-            nextStatus = "dalam perjalanan";
-        }
-        if (status == 'dalam perjalanan') {
-            nextStatus = "selesai";
+        if (status == "dalam perjalanan (antar)") {
+            nextStatus = "selesai"
         }
         return status == 'selesai' ? <></> :
             <Button className="bg-yellow-500 hover:bg-yellow-600 rounded-full" onClick={() => handleClick(nextStatus, row)}>UPDATE {nextStatus.toUpperCase()}</Button>
