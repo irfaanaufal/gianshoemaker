@@ -19,17 +19,13 @@ const calculateShippingPrice = (distance: number, numPairs: number) => {
     if (distance < 3) {
         if (numPairs <= 2) {
             price = 5000;
-        } else if (numPairs >= 2 && numPairs <= 4) {
-            price = 0;
-        } else if (numPairs >= 5) {
+        } else {
             price = 0;
         }
     } else if (distance < 4) {
         if (numPairs <= 2) {
             price = 10000;
-         } else if (numPairs >= 2 && numPairs <= 4) {
-            price = 0;
-        } else if (numPairs >= 5) {
+         } else if (numPairs > 2) {
             price = 0;
         }
     } else if (distance < 5) {
@@ -37,7 +33,7 @@ const calculateShippingPrice = (distance: number, numPairs: number) => {
             price = 20000;
         } else if (numPairs >= 3 && numPairs <= 4) {
             price = 10000;
-        } else if (numPairs > 5) {
+        } else if (numPairs >= 5) {
             price = 0;
         }
     } else if (distance < 7) {
