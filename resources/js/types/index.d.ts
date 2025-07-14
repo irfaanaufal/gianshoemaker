@@ -98,7 +98,7 @@ export interface Order {
     custom_address?: string;
     custom_lat?: string;
     custom_long?: string;
-    status: 'belum diambil' | 'pending' | 'pencucian' | 'pengeringan' | 'siap dikirim/diambil' | 'dalam perjalanan' | 'selesai';
+    status: 'siap diambil' | 'sudah diambil' | 'pending' | 'pencucian' | 'pengeringan' | 'siap dikirim' | 'dalam perjalanan (ambil)' | 'dalam perjalanan (antar)' | 'selesai';
     payment_status: "unpaid" | "paid";
     service_method: 'antar jemput' | 'antar' | 'pickup';
     distance_km: number;

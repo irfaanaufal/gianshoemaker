@@ -155,7 +155,7 @@ class OrderController extends Controller
             "custom_address_pickup" => $request->order["custom_address_pickup"] ?? $request->order["address"],
             "custom_lat_pickup" => $request->addon_order["custom_lat_pickup"] ?? $request->addon_order["custom_lat"],
             "custom_long_pickup" => $request->addon_order["custom_long_pickup"] ?? $request->addon_order["custom_long"],
-            "status" => $request->addon_order["service_method"] == "antar jemput" ? "belum diambil" : "pending",
+            "status" => "pending",
             "payment_status" => "paid",
             "grand_total" => $request->order["gross_amount"] ?? 0,
             "distance_km" => $request->addon_order["distance_km"] ?? 0,
