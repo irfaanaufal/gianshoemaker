@@ -283,4 +283,28 @@ class LogAnalystController extends Controller
             'reason' => $result['reason'],
         ], 201);
     }
+
+    public function recommend(Request $request)
+    {
+        $imageBase64 = $request->input('image');
+
+        $response = Http::withToken(env("OPEN_AI_API"))
+            ->post('https://api.openai.com/v1/chat/completions', [
+                'model' => 'gpt-4o',
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => [
+                            ['type' => 'text', 'text' => 'Apa rekomendasi treatment dari gambar ini?'],
+                            ['type' => 'image_url', 'image_url' => [
+                                'url' => $imageBase64
+                            ]],
+                        ],
+                    ],
+                ],
+                'max_tokens' => 1000,
+            ]);
+
+        return response()->json($response->json());
+    }
 }

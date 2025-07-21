@@ -26,6 +26,7 @@ Route::get('/chatbot', function() {
 Route::controller(LogAnalystController::class)->group(function() {
     Route::post('/chatbot/treatment/recomendation', 'analyze')->name('openai.treatment.analyze');
     Route::post('/chatbot/treatment/recomendation/test', 'analyzeTest')->name('openai.treatment.analyze.test');
+    Route::post('/treatment/recommend', 'recommend')->name('order.treatment.recommend');
 });
 
 

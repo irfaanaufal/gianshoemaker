@@ -3,18 +3,20 @@ import { z } from "zod";
 import { schemaOrder } from "./validation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GoogleMap, Marker, Autocomplete as GoogleAutocomplete, useJsApiLoader } from "@react-google-maps/api";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/utils";
 import { toast } from "sonner";
 import { calculateDistance, calculateShippingPrice } from "./utils";
+import { Badge } from "@/components/ui/badge";
+import DialogOpenAiTreatment from "./openai";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../../components/ui/form";
 
 const FormOrder = ({
     user_options,
@@ -26,15 +28,13 @@ const FormOrder = ({
     treatment_options: Treatment[];
 }) => {
     type FormOrderValue = z.infer<typeof schemaOrder>;
-
-    const fixedLocation: { lat: number; lng: number } = {
+    const fixedLocation = useMemo<{ lat: number; lng: number }>(() => ({
         lat: import.meta.env.VITE_FIXED_LAT,
         lng: import.meta.env.VITE_FIXED_LONG
-    }
+    }), []);
 
     const [existUser, setExistUser] = useState<boolean>(false);
     const [existAddress, setExistAddress] = useState<boolean>(false);
-    const [isPickupAddressSame, setIsPickupAddressSame] = useState<boolean>(true);
     const [userSelectedAddress, setUserSelectedAddress] = useState<UserAddress[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [orderDetail, setOrderDetail] = useState<OrderDetail[]>([]);
@@ -44,8 +44,7 @@ const FormOrder = ({
     const [distance, setDistance] = useState<number | null>(null);
     const [addressB, setAddressB] = useState<string>("");
     const [shipping, setShipping] = useState<number>(0);
-
-    const currentInputFile = useRef<HTMLInputElement>(null);
+    const [serviceMethod, setServiceMethod] = useState<string>("");
 
     // Google Maps API loading
     const { isLoaded } = useJsApiLoader({
@@ -138,7 +137,6 @@ const FormOrder = ({
 
     const handleAddButton = async () => {
         const treatment_id = formOrder.getValues("treatment_id") ?? "";
-        const picture_before = formOrder.getValues("picture_before") ?? new Blob;
         const shoe_name = formOrder.getValues("shoe_name") ?? "";
         const shoe_type_id = formOrder.getValues("shoe_type_id") ?? "";
         const t = treatment_options.find((to) => +treatment_id == to.id);
@@ -147,25 +145,65 @@ const FormOrder = ({
 
         const newOrderDetail = {
             treatment_id: treatment_id,
-            picture_before: URL.createObjectURL(picture_before),
             shoe_name: shoe_name,
             shoe_type_id: shoe_type_id,
             recent_price: +currT
         };
         setOrderDetail(prev => [...prev, newOrderDetail]);
-        const service_method = formOrder.getValues("service_method");
-        if (service_method == "antar jemput") {
-            setShipping(calculateShippingPrice(distance ?? 0, orderDetail.length));
-        } else {
-            setShipping(0);
-        }
         setTotalPrice(newPrice);
-        // currentInputFile.current!.value = "";
+        formOrder.resetField("shoe_name");
+        formOrder.resetField("shoe_type_id");
+        formOrder.resetField("treatment_id");
     };
 
-    const findAddressById = (id: number | string): UserAddress | null => {
-        const row: UserAddress | undefined = userSelectedAddress.find((usaddrs) => id == usaddrs.id)
-        return row ?? null;
+    const handleDeleteButton = async (key: number) => {
+        const isSelected = orderDetail.find((od, idx) => idx === key);
+        const t = treatment_options.find((to) => {
+            const treatment_id = isSelected?.treatment_id ? +isSelected?.treatment_id : 0;
+            return treatment_id === to.id
+        });
+        const price = t ? +t.price : 0;
+        const filteredData = orderDetail.filter((od, idx) => idx !== key) ?? [];
+        setTotalPrice(totalPrice - price);
+        setOrderDetail(filteredData);
+    }
+
+    const handleShipping = useCallback(
+        async (total_order: number) => {
+            try {
+                if (["antar jemput", "antar"].includes(serviceMethod)) {
+                    const finalDistance = distance ?? 0;
+                    const shippingPrice = calculateShippingPrice(finalDistance, total_order);
+                    setShipping(shippingPrice);
+                } else {
+                    setShipping(0);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        },
+        [serviceMethod, distance] // dependency array
+    );
+
+    const handleUserChange = (e: string): string => {
+        const selectedUser = user_options.find((usop) => usop?.id.toString() === e);
+        setUserSelectedAddress(selectedUser?.address ?? []);
+        return e;
+    }
+
+    const handleUserAddressChange = (e: string) => {
+        const selectedAddress = userSelectedAddress.find((usa) => usa?.id.toString() === e);
+        setSelectedLocation({
+            lat: selectedAddress?.lat ? +selectedAddress?.lat : 0,
+            lng: selectedAddress?.long ? +selectedAddress?.long : 0
+        });
+        setAddressB(selectedAddress?.address ?? "");
+        return e;
+    }
+
+    const handleServiceMethodChange = (e: string): string => {
+        setServiceMethod(e);
+        return e;
     }
 
     const findTreatmentById = (id: number | string): Treatment | null => {
@@ -185,9 +223,8 @@ const FormOrder = ({
                 order_details: orderDetail,
                 total_price: totalPrice + shipping,
                 delivery_fee: shipping,
-                distance_km: distance
+                distance_km: distance,
             };
-
             const response = await api.post(route('order.store'), newData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
@@ -196,7 +233,7 @@ const FormOrder = ({
 
             if (response.status === 200) {
                 window.snap.pay(response.data.token, {
-                    onSuccess: async (res: any) => {
+                    onSuccess: async (res: unknown) => {
                         try {
                             const callbackData = {
                                 order: response.data.order,
@@ -217,7 +254,7 @@ const FormOrder = ({
                             toast.error('Failed to process payment callback');
                         }
                     },
-                    onError: (res: any) => {
+                    onError: (res: unknown) => {
                         console.error('Payment error:', res);
                         toast.error('Payment failed');
                     }
@@ -239,7 +276,8 @@ const FormOrder = ({
             );
             setDistance(dist);
         }
-    }, [selectedLocation]);
+        handleShipping(orderDetail.length);
+    }, [fixedLocation, selectedLocation, handleShipping, orderDetail]);
 
     if (!isLoaded) return <div>Loading...</div>;
     return (
@@ -258,15 +296,7 @@ const FormOrder = ({
                                         <FormItem>
                                             <FormLabel>Pilih akun pelanggan</FormLabel>
                                             <FormControl>
-                                                <Select defaultValue={value} {...fieldProps} onValueChange={(e) => {
-                                                    const user_address = user_options.filter((usr) => {
-                                                        return usr?.id?.toString() === e
-                                                    });
-                                                    Promise.all([
-                                                        onChange(e),
-                                                        setUserSelectedAddress(user_address[0]?.address ?? [])
-                                                    ])
-                                                }}>
+                                                <Select value={value} {...fieldProps} onValueChange={(e) => onChange(handleUserChange(e))}>
                                                     <SelectTrigger className="w-full">
                                                         <SelectValue placeholder="Pilih akun pelanggan" />
                                                     </SelectTrigger>
@@ -330,18 +360,7 @@ const FormOrder = ({
                                             <FormItem>
                                                 <FormLabel>Pilih alamat tersimpan user</FormLabel>
                                                 <FormControl>
-                                                    <Select defaultValue={value} {...fieldProps} onValueChange={(e) => {
-                                                        const addrs = userSelectedAddress.find((a) => +e == a.id)
-                                                        Promise.all([
-                                                            onChange(e),
-                                                            setSelectedLocation({
-                                                                lat: addrs?.lat ? +addrs?.lat : 0,
-                                                                lng: addrs?.long ? +addrs?.long : 0
-                                                            }),
-                                                            setAddressB(addrs?.address ?? "")
-                                                        ])
-                                                        console.log(addrs)
-                                                    }}>
+                                                    <Select defaultValue={value} {...fieldProps} onValueChange={(e) => onChange(handleUserAddressChange(e))}>
                                                         <SelectTrigger className="w-full">
                                                             <SelectValue placeholder="Pilih alamat pelanggan" />
                                                         </SelectTrigger>
@@ -359,7 +378,7 @@ const FormOrder = ({
                                     {
                                         distance !== null && fixedLocation &&
                                         (
-                                            <div className="p-4 bg-gray-100 rounded-md">
+                                            <div className="p-4 bg-gray-100 rounded-md ">
                                                 <h3 className="font-medium">Informasi Jarak</h3>
                                                 <p>Lokasi Tetap (Titik A):
                                                     <span className="font-semibold">Jl. Sekeloa No.11, RT.01/RW.06, Sekeloa, Kecamatan Coblong, Kota Bandung, Jawa Barat 40134</span>
@@ -382,7 +401,7 @@ const FormOrder = ({
                                                 <FormItem>
                                                     <FormLabel>Pilih jenis pelayanan</FormLabel>
                                                     <FormControl>
-                                                        <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
+                                                        <Select value={value} {...fieldProps} onValueChange={(e) => onChange(handleServiceMethodChange(e))}>
                                                             <SelectTrigger className="w-full">
                                                                 <SelectValue placeholder="Pilih jenis pelayanan" />
                                                             </SelectTrigger>
@@ -463,7 +482,6 @@ const FormOrder = ({
                                             </Button>
                                         </div>
                                     </div>
-
                                     {
                                         distance !== null && fixedLocation &&
                                         (
@@ -481,7 +499,6 @@ const FormOrder = ({
                                             </div>
                                         )
                                     }
-
                                     {
                                         distance &&
                                         <FormField
@@ -491,7 +508,7 @@ const FormOrder = ({
                                                 <FormItem>
                                                     <FormLabel>Pilih jenis pelayanan</FormLabel>
                                                     <FormControl>
-                                                        <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
+                                                        <Select value={value} {...fieldProps} onValueChange={(e) => onChange(handleServiceMethodChange(e))}>
                                                             <SelectTrigger className="w-full">
                                                                 <SelectValue placeholder="Pilih jenis pelayanan" />
                                                             </SelectTrigger>
@@ -576,32 +593,21 @@ const FormOrder = ({
                                 <FormItem>
                                     <FormLabel>Treatment yang dipilih</FormLabel>
                                     <FormControl>
-                                        <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Treatment yang dipilih" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {treatment_options.map((treatment) => (
-                                                    <SelectItem value={treatment.id.toString()} key={treatment.slug}>{treatment.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={formOrder.control}
-                            name="picture_before"
-                            render={({ field: { value, onChange, ...fieldProps } }) => (
-                                <FormItem>
-                                    <FormLabel>Foto Kondisi Sepatu</FormLabel>
-                                    <FormControl>
-                                        <Input {...fieldProps} ref={currentInputFile} type={"file"} onChange={(e) => {
-                                            const file = e.target.files && e.target.files[0];
-                                            onChange(file);
-                                        }} />
+                                        <div className="flex flex-row gap-2 items-center">
+                                            <Select defaultValue={value} {...fieldProps} onValueChange={onChange}>
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Treatment yang dipilih" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {treatment_options.map((treatment) => (
+                                                        <SelectItem value={treatment.id.toString()} key={treatment.slug}>{treatment.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <DialogOpenAiTreatment
+                                                buttonLabel="Rekomendasi Treatment"
+                                            />
+                                        </div>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -616,13 +622,11 @@ const FormOrder = ({
                                 orderDetail.map((od, idxod) =>
                                 (
                                     <Card key={idxod}>
-                                        <CardHeader>
+                                        <CardHeader className="flex flex-row justify-between items-center w-full">
                                             <CardTitle>Nama Sepatu : {od.shoe_name}</CardTitle>
-                                            <CardAction>
-                                                <Button variant={'outline'} className="bg-red-500 hover:bg-red-600 text-white hover:text-white">
-                                                    <i className="fa-solid fa-trash"></i>
-                                                </Button>
-                                            </CardAction>
+                                            <Badge className="bg-red-500 hover:bg-red-600 text-white hover:text-white float-end py-[1rem] px-[1rem]" role="button" id="delete_data" onClick={() => handleDeleteButton(idxod)}>
+                                                <i className="fa-solid fa-trash"></i>
+                                            </Badge>
                                         </CardHeader>
                                         <CardContent className="flex flex-col">
                                             <span>Jenis Sepatu : {findShoeTypeById(+od.shoe_type_id)?.name}</span>
@@ -638,7 +642,7 @@ const FormOrder = ({
                                 <>
                                     <span>Ongkir : Rp. {Intl.NumberFormat('id-ID').format(shipping)}</span>
                                     <span>Total Harga : Rp. {Intl.NumberFormat('id-ID').format(totalPrice + shipping)}</span>
-                                    <Button variant={'outline'} className="bg-green-500 hover:bg-green-600 text-white hover:text-white" disabled={formOrder.formState.isSubmitting}>
+                                    <Button className="bg-green-500 hover:bg-green-600 text-white hover:text-white" id="submit_form" disabled={formOrder.formState.isSubmitting}>
                                         Checkout Sekarang!
                                     </Button>
                                 </>

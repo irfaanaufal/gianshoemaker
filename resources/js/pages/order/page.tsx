@@ -120,10 +120,13 @@ const PageOrder = ({
                                     user_login.roles[0].name == "admin" ?
                                         <>
                                             <DetailOrder order={row} />
-                                            {['siap diambil', 'siap dikirim', 'dalam perjalanan (ambil)', 'dalam perjalanan (antar)', 'selesai'].includes(row.status) ? <></> : buttonUpdate(row.status, row)}
+                                            {['siap dikirim', 'dalam perjalanan (ambil)', 'dalam perjalanan (antar)', 'selesai', 'pending'].includes(row.status) ? <></> : buttonUpdate(row.status, row)}
                                         </>
                                         :
-                                        <DetailOrder order={row} />
+                                        <>
+                                            <DetailOrder order={row} />
+                                            {row.status == 'pending' && buttonUpdate(row.status, row)}
+                                        </>
                                 }
                             </div>
                         )
@@ -188,7 +191,7 @@ const DetailOrder = ({
                 </div>
                 <div className="flex flex-col space-y-2 px-4 mb-[1rem]">
                     <Label className="text-md">Nomor Telp :</Label>
-                    <p className="text md">{order.user ? order.user.phone : order.custom_phone}</p>
+                    <p className="text md">{order?.custom_phone ?? order?.user?.phone}</p>
                 </div>
                 <div className="flex flex-col space-y-2 px-4 mb-[1rem]">
                     <Label className="text-md">Alamat Email :</Label>

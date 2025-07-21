@@ -6,14 +6,8 @@ const schemaOrder = z.object({
     }).optional(),
     treatment_id: z.string({
         message: `Harap pilih treatment!`
-    })
-    .min(1, {
-        message: `Harap pilih treatment!`
     }).optional(),
     shoe_type_id: z.string({
-        message: `Harap pilih tipe sepatu!`
-    })
-    .min(1, {
         message: `Harap pilih tipe sepatu!`
     }).optional(),
     user_id: z.string().optional(),
@@ -23,14 +17,7 @@ const schemaOrder = z.object({
     custom_address: z.string().optional(),
     custom_lat: z.string().optional(),
     custom_long: z.string().optional(),
-    custom_address_pickup: z.string().optional(),
-    custom_lat_pickup: z.string().optional(),
-    custom_long_pickup: z.string().optional(),
     service_method: z.string().optional(),
-    picture_before: z.instanceof(File)
-    .refine(file => file.size <= 4000000, {
-        message: `File tidak boleh lebih besar dari 4MB`
-    }).optional()
 });
 
 export { schemaOrder };

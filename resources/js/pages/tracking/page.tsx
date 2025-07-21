@@ -1,9 +1,9 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import HeadingSmall from '@/components/heading-small';
-import { Order, UserAddress, type BreadcrumbItem } from '@/types';
+import { Order, type BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { ReactNode, useState } from 'react';
-import { GoogleMap, Marker, Autocomplete, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,12 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { api } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useMediaQuery } from '@/lib/use-media-query';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,8 +43,7 @@ export default function PageTracking({
     title: string;
     orders: Order[]
 }) {
-    const { props } = usePage();
-    const address: UserAddress[] = props.user_address as UserAddress[];
+    const isDesktop = useMediaQuery("(min-width: 768px)");
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
     // Google Maps API loading
     const { isLoaded } = useJsApiLoader({
@@ -88,7 +93,7 @@ export default function PageTracking({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={title} />
-            <div className="flex flex-col-reverse md:flex-row lg:flex-row-reverse gap-3 w-full p-4 max-h-[90vh]">
+            <div className="flex flex-col md:flex-row lg:flex-row-reverse gap-3 w-full p-4 max-h-[90vh]">
                 <div className="flex flex-col space-y-3 w-full md:w-[70%] lg:w-[70%]">
                     <HeadingSmall title="Lihat Alamat Pesaan" description="" />
                     <div className="w-full rounded-xl h-[30rem]">
@@ -105,41 +110,82 @@ export default function PageTracking({
                         </GoogleMap>
                     </div>
                 </div>
-                {/* Daftar alamat */}
-                <div className="w-full md:w-[30%] lg:w-[30%] flex flex-col space-y-3 overflow-y-scroll">
-                    <h3>Daftar Order</h3>
-                    {orders.length < 1 && <p className="text-xl">Tidak ada orderan</p>}
-                    {orders.map((r: Order) => {
-                        console.log(r)
-                        return (
-                            <Card key={r.trx}>
-                                <CardHeader>
-                                    <CardTitle>No : {r.trx} ({r.user ? r.user.name : r.custom_user})</CardTitle>
-                                    <CardDescription>{r.user_address ? r.user_address.address : r.custom_address}</CardDescription>
-                                    <CardAction className="flex gap-2">
-                                        <Button onClick={() => {
-                                            const lat = r.custom_lat ? +r.custom_lat : +r.user_address.lat;
-                                            const lng = r.custom_long ? +r.custom_long : +r.user_address.long;
-                                            // console.log(lat, lng);
-                                            setSelectedLocation({ lat, lng });
-                                        }} className="bg-red-500 hover:bg-red-600 rounded-full">
-                                            <i className="fa-solid fa-location-dot text-white"></i>
-                                        </Button>
-                                        <DetailOrder order={r} />
-                                    </CardAction>
-                                </CardHeader>
-                                <CardContent className="w-full flex flex-row gap-3">
-                                    <span>Latitude : {r?.user_address?.lat}</span>
-                                    <span>longitude : {r?.user_address?.long}</span>
-                                </CardContent>
-                                <CardFooter>
-                                    {buttonUpdate(r.status, r)}
-                                </CardFooter>
-                            </Card>
-                        )
-                    }
-                    )}
-                </div>
+                {isDesktop ?
+                    <div className="hidden w-full md:w-[30%] lg:w-[30%] md:flex lg:flex flex-col space-y-3 overflow-y-scroll">
+                        <h3>Daftar Order</h3>
+                        {orders.length < 1 && <p className="text-xl">Tidak ada orderan</p>}
+                        {orders.map((r: Order) => {
+                            return (
+                                <Card key={r.trx}>
+                                    <CardHeader>
+                                        <CardTitle>No : {r.trx} ({r.user ? r.user.name : r.custom_user})</CardTitle>
+                                        <CardDescription>{r.user_address ? r.user_address.address : r.custom_address}</CardDescription>
+                                        <CardAction className="flex gap-2">
+                                            <Button onClick={() => {
+                                                const lat = r.custom_lat ? +r.custom_lat : +r.user_address.lat;
+                                                const lng = r.custom_long ? +r.custom_long : +r.user_address.long;
+                                                // console.log(lat, lng);
+                                                setSelectedLocation({ lat, lng });
+                                            }} className="bg-red-500 hover:bg-red-600 rounded-full">
+                                                <i className="fa-solid fa-location-dot text-white"></i>
+                                            </Button>
+                                            <DetailOrder order={r} />
+                                        </CardAction>
+                                    </CardHeader>
+                                    <CardContent className="w-full flex flex-row gap-3">
+                                        <span>Latitude : {r?.custom_lat ?? r?.user_address?.lat}</span>
+                                        <span>longitude : {r?.user_address?.long}</span>
+                                    </CardContent>
+                                    <CardFooter>
+                                        {buttonUpdate(r.status, r)}
+                                    </CardFooter>
+                                </Card>
+                            )
+                        }
+                        )}
+                    </div>
+                    :
+                    <div className="flex flex-col mt-[1rem] overflow-scroll gap-3">
+                        {orders.length < 1 && <p className="text-xl">Tidak ada orderan</p>}
+                        {orders.map((r: Order, idx) => {
+                            return (
+                                <Collapsible key={r?.trx} className="flex flex-col gap-3 justify-start items-start">
+                                    <CollapsibleTrigger>
+                                        <Badge className="p-3">
+                                            <h3 className="text-xl">Orderan Ke-{idx + 1}</h3>
+                                        </Badge>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent>
+                                        <Card key={r.trx}>
+                                            <CardHeader>
+                                                <CardTitle>No : {r.trx} ({r.user ? r.user.name : r.custom_user})</CardTitle>
+                                                <CardDescription>{r.user_address ? r.user_address.address : r.custom_address}</CardDescription>
+                                                <CardAction className="flex gap-2">
+                                                    <Button onClick={() => {
+                                                        const lat = r.custom_lat ? +r.custom_lat : +r.user_address.lat;
+                                                        const lng = r.custom_long ? +r.custom_long : +r.user_address.long;
+                                                        // console.log(lat, lng);
+                                                        setSelectedLocation({ lat, lng });
+                                                    }} className="bg-red-500 hover:bg-red-600 rounded-full">
+                                                        <i className="fa-solid fa-location-dot text-white"></i>
+                                                    </Button>
+                                                    <DetailOrder order={r} />
+                                                </CardAction>
+                                            </CardHeader>
+                                            <CardContent className="w-full flex flex-row gap-3">
+                                                <span>Latitude : {r?.custom_lat ?? r?.user_address?.lat}</span>
+                                                <span>longitude : {r?.user_address?.long}</span>
+                                            </CardContent>
+                                            <CardFooter>
+                                                {buttonUpdate(r.status, r)}
+                                            </CardFooter>
+                                        </Card>
+                                    </CollapsibleContent>
+                                </Collapsible>
+                            )
+                        })}
+                    </div>
+                }
             </div>
         </AppLayout>
     )

@@ -111,7 +111,7 @@ export interface OrderDetail {
     order_id?: string;
     treatment_id: string;
     shoe_type_id: string;
-    picture_before: string;
+    picture_before?: string;
     picture_after?: string;
     shoe_name: string;
     recent_price?: number;

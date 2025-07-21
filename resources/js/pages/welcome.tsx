@@ -89,9 +89,9 @@ export default function Welcome() {
                 </section>
 
             </div>
-            <div className="flex sticky bottom-10 right-10 float-end w-[7rem] h-[7rem] bg-slate-300 rounded-full justify-center items-center">
-                <Link href={route('openai')}>
-                    <img src="/assets/logo-gpt.png" alt="Logo Chat GPT" className="w-[7rem] h-[7rem] object-cover" />
+            <div className="flex sticky bottom-10 right-10 float-end w-[7rem] h-[7rem] bg-green-400 rounded-full justify-center items-center">
+                <Link href={`https://wa.me/6287831633858`}>
+                    <i className="fa-brands fa-whatsapp text-7xl"></i>
                 </Link>
             </div>
         </div>
