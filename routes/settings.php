@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/address', [ProfileController::class, 'address'])->name('profile.address');
     Route::get('settings/address/create', [ProfileController::class, 'create_address'])->name('profile.address.create');
+    Route::get('settings/address/{user_address}/edit', [ProfileController::class, 'edit_address'])->name('profile.address.edit');
 
 
     Route::get('settings/appearance', function () {

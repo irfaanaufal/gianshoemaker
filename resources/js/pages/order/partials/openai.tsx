@@ -9,7 +9,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Link } from '@inertiajs/react';
 import { ReactNode, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { z } from 'zod';
@@ -17,14 +16,13 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { api } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 
 interface OpenAi {
     dirtiness_level: string;
     is_yellowing: boolean;
-    treatment: Treatment;
+    treatments: Treatment[];
     reason: string;
 }
 
@@ -78,11 +76,13 @@ function OpenAITreatment() {
             const formData = new FormData();
             formData.append("image", data.image);
 
-            const response = await api.post(route('openai.treatment.analyze'), formData, {
+            const response = await api.post(route('order.treatment.recommend'), formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }
             });
+
+            console.log(response.data);
 
             if (response.status === 201) {
                 setOpenaiRes(response.data);
@@ -155,10 +155,22 @@ function OpenAITreatment() {
             {openaiRes && (
                 <div className="flex flex-col space-y-3 w-full mt-6">
                     <h3 className="text-xl font-bold text-center">Hasil Analisis</h3>
-                    <span>Treatment yang direkomendasikan: <strong>{openaiRes.treatment.name.toUpperCase()}</strong></span>
+                    {/* <span>Treatment yang direkomendasikan: <strong></strong></span> */}
+                    {/* {openaiRes.treatment.name.toUpperCase()} */}
                     <Separator />
-                    <span>Alasan: </span>
                     <div dangerouslySetInnerHTML={{ __html: openaiRes.reason }} />
+                    <Separator />
+                    <h3 className="text-xl font-bold">Treatment yang direkomendasikan</h3>
+                    { openaiRes.treatments &&
+                    openaiRes.treatments.map((t, idxt) => {
+                        return (
+                            <div className="flex flex-col">
+                                <h5 className="text-md" key={idxt}>{idxt + 1}. {t.name}</h5>
+                                <p className="text-justify">{t.description}</p>
+                                <p>Harga : Rp. {Intl.NumberFormat('id-ID').format(+t.price)}</p>
+                            </div>
+                        )
+                    })}
                 </div>
             )}
         </>

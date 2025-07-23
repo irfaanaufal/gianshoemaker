@@ -29,7 +29,6 @@ const PageCreateMenu = ({
                     <h3 className="text-xl font-bold">
                         Form Tambah Menu
                     </h3>
-                    <p className="text-sm text-slate-500">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Blanditiis, repellendus eaque. Eum modi impedit necessitatibus culpa ut iste repellat consequatur.</p>
                     <Link href={route('menu.index')}>
                         <Button variant={'destructive'} className="text-white">Kembali</Button>
                     </Link>

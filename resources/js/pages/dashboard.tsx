@@ -1,7 +1,6 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { SharedData, User, type BreadcrumbItem } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -10,24 +9,38 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Dashboard() {
+interface DashboardProps {
+    title: string;
+    total_order: number;
+    active_order: number;
+    revenue: number;
+}
+
+export default function Dashboard({
+    title,
+    total_order,
+    active_order,
+    revenue
+}: DashboardProps) {
+    const { auth } = usePage<SharedData>().props;
+    const user_login: User = auth.user
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+            <Head title={title} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                <div className="flex flex-row justify-between">
+                    <div className="flex-1 flex-col gap-3 items-center py-[2rem]">
+                        <h3 className="text-black dark:text-white text-2xl text-center">Total Order</h3>
+                        <h2 className="text-4xl text-center">{total_order}</h2>
                     </div>
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                    <div className="flex-1 flex-col gap-3 items-center py-[2rem]">
+                        <h3 className="text-black dark:text-white text-2xl text-center">Total Order Aktif</h3>
+                        <h2 className="text-4xl text-center">{active_order}</h2>
                     </div>
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                    <div className="flex-1 flex-col gap-3 items-center py-[2rem]">
+                        <h3 className="text-black dark:text-white text-2xl text-center">${user_login.roles[0].name == 'pelanggan' ? `Total Pengeluaran` : `Total Pendapatan`}</h3>
+                        <h2 className="text-4xl text-center">Rp. {Intl.NumberFormat('id-ID').format(revenue)}</h2>
                     </div>
-                </div>
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
                 </div>
             </div>
         </AppLayout>

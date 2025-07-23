@@ -47,16 +47,23 @@ export default function Address() {
                         <h3>Daftar Alamat</h3>
                         {address.map((a: UserAddress) => (
                             <Card>
-                                <CardHeader>
-                                    <CardTitle>{a.label}</CardTitle>
-                                    <CardDescription>{a.address}</CardDescription>
-                                    <CardAction>
-                                        <Button variant={'outline'} onClick={() => {
+                                <CardHeader className="flex flex-row justify-between items-center">
+                                    <div className="flex flex-col">
+                                        <CardTitle>{a.label}</CardTitle>
+                                        <CardDescription>{a.address}</CardDescription>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button onClick={() => {
                                             setSelectedLocation({ lat: +a.lat, lng: +a.long });
                                         }} className="bg-red-500 hover:bg-red-600">
-                                            <i className="fa-solid fa-location-dot"></i>
+                                            <i className="fa-solid fa-location-dot text-white"></i>
                                         </Button>
-                                    </CardAction>
+                                        <Link href={route('profile.address.edit', { user_address: a.id })}>
+                                            <Button className="bg-yellow-300">
+                                                <i className="fa-solid fa-pencil"></i>
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </CardHeader>
                                 <CardContent className="w-full flex flex-row gap-3">
                                     <span>Latitude : {a.lat}</span>

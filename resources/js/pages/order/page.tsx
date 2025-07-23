@@ -42,6 +42,16 @@ const PageOrder = ({
             sortable: true
         },
         {
+            key: "service_method",
+            label: "Pelayanan yang Dipilih",
+            sortable: true,
+            render: (row: Order) => {
+                return (
+                    <Badge className={`px-3 py-1 text-md font-bold rounded-full`}>{row.service_method.toUpperCase()}</Badge>
+                )
+            }
+        },
+        {
             key: "status",
             label: "Status",
             sortable: true,
@@ -120,12 +130,20 @@ const PageOrder = ({
                                     user_login.roles[0].name == "admin" ?
                                         <>
                                             <DetailOrder order={row} />
-                                            {['siap dikirim', 'dalam perjalanan (ambil)', 'dalam perjalanan (antar)', 'selesai', 'pending'].includes(row.status) ? <></> : buttonUpdate(row.status, row)}
+                                            {
+                                                ['siap dikirim', 'dalam perjalanan (ambil)', 'dalam perjalanan (antar)', 'selesai', 'siap diambil'].includes(row.status) ?
+                                                    <></>
+                                                    :
+                                                    row.status == 'pending' && row.service_method == 'antar jemput' ?
+                                                    <></>
+                                                    :
+                                                    buttonUpdate(row.status, row)
+                                            }
                                         </>
                                         :
                                         <>
                                             <DetailOrder order={row} />
-                                            {row.status == 'pending' && buttonUpdate(row.status, row)}
+                                            {row.status == 'pending' && row.service_method == 'antar jemput' && buttonUpdate(row.status, row)}
                                         </>
                                 }
                             </div>

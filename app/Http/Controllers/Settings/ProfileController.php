@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\UserAddress;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,6 +36,14 @@ class ProfileController extends Controller
     {
         return Inertia::render('settings/create-address', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+        ]);
+    }
+
+    public function edit_address(Request $request, UserAddress $user_address): Response
+    {
+        return Inertia::render('settings/edit-address', [
+            "mustVerifyEmail" => $request->user() instanceof MustVerifyEmail,
+            "user_address" => $user_address->load(['user'])
         ]);
     }
 

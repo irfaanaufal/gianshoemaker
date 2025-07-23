@@ -28,7 +28,8 @@ class Order extends Model
         'distance_km',
         'pickup_distance_km',
         'delivery_fee',
-        'service_method'
+        'service_method',
+        'grand_total',
     ];
 
     public function order_details(): HasMany

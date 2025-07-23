@@ -103,6 +103,119 @@ class LogAnalystController extends Controller
         ], 201);
     }
 
+    public function another_analyze(Request $request)
+    {
+        $request->validate(['image' => 'required|image|max:4096']);
+
+        $file = $request->file('image');
+        $path = $file->store('shoes', 'public');
+        $mimeType = $file->getMimeType();
+        $imageData = base64_encode(file_get_contents(storage_path("app/public/$path")));
+
+        $treatments = Treatment::all()->map(function ($t) {
+            return [
+                'name' => $t->name,
+                'slug' => $t->slug,
+                'description' => $t->description,
+                'price' => $t->price,
+                'analyze' => $t->analyze,
+                'is_yellow' => $t->is_yellow,
+            ];
+        });
+
+        $prompt = <<<PROMPT
+Kamu adalah pakar perawatan sepatu.
+
+Tugas:
+1. Analisis gambar sepatu yang diberikan.
+2. Tentukan tingkat kekotoran sepatu (low, medium, high) & apakah mengalami yellowing.
+3. Rekomendasikan **2 hingga 3 treatment terbaik** berdasarkan kondisi sepatu dari daftar berikut.
+
+⚠️ Aturan:
+- Jika sepatu **yellowing**, hanya pilih treatment dengan `is_yellow = true`.
+- Jika **tidak yellowing**, hanya pilih treatment dengan `is_yellow = false`.
+- Jika gambar **bukan sepatu**, balas: "Saya Tidak Melihat Sepatu Pada Gambar Tersebut".
+- Jika sepatu terlihat **baru & bersih**, balas: "Sepatu Ini Baru Tidak Terdeteksi Kekotoran".
+
+🔁 Format jawaban JSON:
+{
+  "dirtiness_level": "low|medium|high",
+  "is_yellowing": true|false,
+  "treatments": [
+    {
+      "name": "Treatment A",
+      "slug": "treatment-a",
+      "description": "...",
+      "price": "..."
+    },
+    ...
+  ],
+  "reason": "(isi HTML sesuai ketentuan frontend)"
+}
+
+Catatan:
+- Reason wajib dalam format HTML: gunakan `<strong>`, `<br/>`, dan heading `text-xl`.
+- Gunakan penjelasan berdasarkan skala kekotoran 10% hingga 100% secara bertahap.
+- Sertakan analisis upper, midsole, outsole seperti instruksi sebelumnya.
+PROMPT;
+
+        $response = Http::withToken(env("OPEN_AI_API"))
+            ->post('https://api.openai.com/v1/chat/completions', [
+                'model' => 'gpt-4o',
+                'messages' => [
+                    ['role' => 'system', 'content' => 'Anda adalah asisten AI ahli pembersih sepatu.'],
+                    [
+                        'role' => 'user',
+                        'content' => [
+                            ['type' => 'text', 'text' => $prompt],
+                            ['type' => 'image_url', 'image_url' => ['url' => 'data:' . $mimeType . ';base64,' . $imageData]],
+                            ['type' => 'text', 'text' => 'List of treatments: ' . json_encode($treatments)],
+                        ],
+                    ],
+                ],
+                'max_tokens' => 2000,
+            ]);
+
+        $json = $response->json();
+
+        if (!isset($json['choices'][0]['message']['content'])) {
+            return response()->json([
+                'error' => 'OpenAI API Error',
+                'details' => $json,
+            ], 500);
+        }
+
+        $content = $json['choices'][0]['message']['content'] ?? 'No response content';
+        $cleanedContent = trim(str_replace('json', '', $content), "`");
+        $result = json_decode($cleanedContent, true);
+
+        if (!isset($result['dirtiness_level'], $result['is_yellowing'], $result['treatments'], $result['reason'])) {
+            return response()->json([
+                'error' => 'Invalid response format from OpenAI',
+                'details' => $result,
+            ], 500);
+        }
+
+        // Ambil detail treatment berdasarkan slug
+        $recommendedTreatments = collect($result['treatments'])->map(function ($t) {
+            $model = Treatment::where('slug', $t['slug'])->first();
+            return $model ? [
+                'name' => $model->name,
+                'slug' => $model->slug,
+                'description' => $model->description,
+                'price' => $model->price,
+                'picture' => $model->picture
+            ] : $t;
+        });
+
+        return response()->json([
+            'dirtiness_level' => $result['dirtiness_level'],
+            'is_yellowing' => $result['is_yellowing'],
+            'treatments' => $recommendedTreatments,
+            'reason' => $result['reason'],
+        ], 201);
+    }
+
     public function analyze(Request $request)
     {
         $request->validate(['image' => 'required|image|max:4096']);

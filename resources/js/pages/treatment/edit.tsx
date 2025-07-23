@@ -29,7 +29,6 @@ const PageEditTreatment = ({
                     <h3 className="text-xl font-bold">
                         Form Edit Treatment
                     </h3>
-                    <p className="text-sm text-slate-500">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Blanditiis, repellendus eaque. Eum modi impedit necessitatibus culpa ut iste repellat consequatur.</p>
                     <Link href={route('treatment.index')}>
                         <Button variant={'destructive'} className="text-white">Kembali</Button>
                     </Link>

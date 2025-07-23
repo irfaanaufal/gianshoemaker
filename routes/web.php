@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\MenuAPIController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LogAnalystController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\MidtransController;
@@ -26,14 +27,12 @@ Route::get('/chatbot', function() {
 Route::controller(LogAnalystController::class)->group(function() {
     Route::post('/chatbot/treatment/recomendation', 'analyze')->name('openai.treatment.analyze');
     Route::post('/chatbot/treatment/recomendation/test', 'analyzeTest')->name('openai.treatment.analyze.test');
-    Route::post('/treatment/recommend', 'recommend')->name('order.treatment.recommend');
+    Route::post('/treatment/recommend', 'another_analyze')->name('order.treatment.recommend');
 });
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
 Route::middleware('auth')->group(function() {

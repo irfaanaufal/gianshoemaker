@@ -24,12 +24,10 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 
 const FormCreateAddress = ({
-    promises,
     editMode,
     readMode,
     address
 }: {
-    promises?: () => void;
     editMode?: boolean;
     readMode?: boolean;
     address?: UserAddress
@@ -141,11 +139,11 @@ const FormCreateAddress = ({
             const newData = editMode ? { ...data, _method: "PUT", user_id: auth.user.id } : { ...data, user_id: auth.user.id };
             const url = editMode ? route('user-address.update', { user_address: address }) : route('user-address.store');
             const response = await api.post(url, newData);
-            if (response.status === 205) {
-                toast(response.data.message);
-            }
+            toast(response.data.message);
             if (response.status === 200) {
-                toast(response.data.message);
+                setTimeout(() => {
+                    window.location.href = route('profile.address');
+                }, 3000);
             }
         } catch (error) {
             console.log(error)

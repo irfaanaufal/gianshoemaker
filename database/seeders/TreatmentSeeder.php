@@ -41,16 +41,8 @@ class TreatmentSeeder extends Seeder
             ],
             (object)[
                 "name" => "Unyellowing Treatment",
-                "price" =>  120000 ,
-                "description" => "Perawatan yang dikhususkan untuk midsole sepatu yang telah menguning.",
-                "picture" => "/assets/galery-9.jpg",
-                "analyze" => 0.5,
-                "is_yellow" => true
-            ],
-            (object)[
-                "name" => "Repaint Treatment",
                 "price" =>  75000,
-                "description" => "Perawatan restorasi warna dengan penggunaan cat khusus yang ditujukan untuk mengembalikan warna awal sepatu seperti semula.",
+                "description" => "Perawatan yang dikhususkan untuk midsole sepatu yang telah menguning.",
                 "picture" => "/assets/galery-9.jpg",
                 "analyze" => 0.5,
                 "is_yellow" => true

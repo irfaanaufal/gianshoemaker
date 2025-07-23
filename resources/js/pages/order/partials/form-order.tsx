@@ -407,9 +407,15 @@ const FormOrder = ({
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {
-                                                                    distance !== null && distance < 10 &&
+                                                                    distance !== null && distance < 10 && existUser &&
                                                                     ['antar jemput', 'antar', 'pickup'].map((jp, idxjp) => (
                                                                         <SelectItem value={jp} key={idxjp}>{jp.toUpperCase()}</SelectItem>
+                                                                    ))
+                                                                }
+                                                                {
+                                                                    distance !== null && distance < 10 && !existUser &&
+                                                                    ['antar', 'pickup'].map((ap, idxap) => (
+                                                                        <SelectItem value={ap} key={idxap}>{ap.toUpperCase()}</SelectItem>
                                                                     ))
                                                                 }
                                                                 {
@@ -514,9 +520,15 @@ const FormOrder = ({
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {
-                                                                    distance !== null && distance < 10 &&
+                                                                    distance !== null && distance < 10 && existUser &&
                                                                     ['antar jemput', 'antar', 'pickup'].map((jp, idxjp) => (
                                                                         <SelectItem value={jp} key={idxjp}>{jp.toUpperCase()}</SelectItem>
+                                                                    ))
+                                                                }
+                                                                {
+                                                                    distance !== null && distance < 10 && !existUser &&
+                                                                    ['antar', 'pickup'].map((ap, idxap) => (
+                                                                        <SelectItem value={ap} key={idxap}>{ap.toUpperCase()}</SelectItem>
                                                                     ))
                                                                 }
                                                                 {
