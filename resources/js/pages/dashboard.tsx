@@ -38,7 +38,7 @@ export default function Dashboard({
                         <h2 className="text-4xl text-center">{active_order}</h2>
                     </div>
                     <div className="flex-1 flex-col gap-3 items-center py-[2rem]">
-                        <h3 className="text-black dark:text-white text-2xl text-center">${user_login.roles[0].name == 'pelanggan' ? `Total Pengeluaran` : `Total Pendapatan`}</h3>
+                        <h3 className="text-black dark:text-white text-2xl text-center">{user_login.roles[0].name == 'pelanggan' ? `Total Pengeluaran` : `Total Pendapatan`}</h3>
                         <h2 className="text-4xl text-center">Rp. {Intl.NumberFormat('id-ID').format(revenue)}</h2>
                     </div>
                 </div>
