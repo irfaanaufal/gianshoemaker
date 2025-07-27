@@ -100,7 +100,11 @@ const PageOrder = ({
             nextStatus = "pengeringan"
         }
         if (status == "pengeringan") {
-            nextStatus = "siap dikirim"
+            if (row.service_method == 'pickup') {
+                nextStatus = "selesai"
+            } else {
+                nextStatus = "siap dikirim"
+            }
         }
         return status == 'selesai' ? <></> :
             <Button className="bg-yellow-500 hover:bg-yellow-600 rounded-full" onClick={() => handleClick(nextStatus, row)}>UPDATE {nextStatus.toUpperCase()}</Button>
@@ -135,9 +139,9 @@ const PageOrder = ({
                                                     <></>
                                                     :
                                                     row.status == 'pending' && row.service_method == 'antar jemput' ?
-                                                    <></>
-                                                    :
-                                                    buttonUpdate(row.status, row)
+                                                        <></>
+                                                        :
+                                                        buttonUpdate(row.status, row)
                                             }
                                         </>
                                         :
