@@ -30,7 +30,7 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'GIANSHOEMAKER') }}</title>
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -39,7 +39,11 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
         <script src="https://kit.fontawesome.com/bf0dca62b9.js" crossorigin="anonymous"></script>
+        @if(config('midtrans.is_production'))
+        <script type="text/javascript" src="https://app.midtrans.com/snap/v1/transactions" data-client-key="{{ config('midtrans.client_key') }}"></script>
+        @else
         <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
+        @endif
 
         @routes
         @viteReactRefresh

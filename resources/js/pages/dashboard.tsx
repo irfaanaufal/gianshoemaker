@@ -67,76 +67,72 @@ export default function Dashboard({
                         <h2 className="text-4xl text-center">Rp. {Intl.NumberFormat('id-ID').format(revenue)}</h2>
                     </div>
                 </div>
-                {['admin', 'kurir'].includes(user_login.roles[0].name) &&
-                    <>
-                        <div className="flex flex-1 flex-row justify-center items-start w-full gap-4">
-                            <Card className="w-full">
-                                <CardHeader>
-                                    <CardTitle>Treatment Terpopuler</CardTitle>
-                                </CardHeader>
-                                <CardContent className="h-72">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={top_treatments}
-                                                dataKey="value"
-                                                nameKey="label"
-                                                cx="50%"
-                                                cy="50%"
-                                                outerRadius={90}
-                                                fill="#8884d8"
-                                                label
-                                            >
-                                                {top_treatments.map((_, index) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
-                            <Card className="w-full">
-                                <CardHeader>
-                                    <CardTitle>Total Order Bulanan</CardTitle>
-                                </CardHeader>
-                                <CardContent className="h-72">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={monthly_orders}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="month" />
-                                            <YAxis allowDecimals={false} />
-                                            <Tooltip />
-                                            <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
-                        </div>
-                        <div className="flex flex-1 flex-row justify-center items-start w-full gap-4">
-                            <Card className="w-full">
-                                <CardHeader>
-                                    <CardTitle>Pendapatan Bulanan (Rp)</CardTitle>
-                                </CardHeader>
-                                <CardContent className="h-72">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={monthly_revenue}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="month" />
-                                            <YAxis tickFormatter={(value) => `Rp${value.toLocaleString('id-ID')}`} />
-                                            <Tooltip
-                                                formatter={(value: number) =>
-                                                    `Rp${value.toLocaleString('id-ID')}`
-                                                }
-                                            />
-                                            <Bar dataKey="revenue" fill="#82ca9d" radius={[4, 4, 0, 0]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </>
-                }
+                <div className="flex flex-1 flex-row justify-center items-start w-full gap-4">
+                    <Card className="w-full">
+                        <CardHeader>
+                            <CardTitle>Treatment Terpopuler</CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={top_treatments}
+                                        dataKey="value"
+                                        nameKey="label"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={90}
+                                        fill="#8884d8"
+                                        label
+                                    >
+                                        {top_treatments.map((_, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                    <Card className="w-full">
+                        <CardHeader>
+                            <CardTitle>Total Order Bulanan</CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={monthly_orders}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="month" />
+                                    <YAxis allowDecimals={false} />
+                                    <Tooltip />
+                                    <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="flex flex-1 flex-row justify-center items-start w-full gap-4">
+                    <Card className="w-full">
+                        <CardHeader>
+                            <CardTitle>Pendapatan Bulanan (Rp)</CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={monthly_revenue}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="month" />
+                                    <YAxis tickFormatter={(value) => `Rp${value.toLocaleString('id-ID')}`} />
+                                    <Tooltip
+                                        formatter={(value: number) =>
+                                            `Rp${value.toLocaleString('id-ID')}`
+                                        }
+                                    />
+                                    <Bar dataKey="revenue" fill="#82ca9d" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </AppLayout>
     );
