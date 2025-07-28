@@ -170,7 +170,7 @@ export default function PageTracking({
                                         >
                                             <div className="flex items-center justify-between gap-4 px-4">
                                                 <h4 className="text-sm font-semibold">
-                                                    Order#{idxo + 1}
+                                                    {data.user ? data.user.name : data.custom_user} | Order#{idxo + 1}
                                                 </h4>
                                                 <div className="flex flex-row items-center gap-2">
                                                     <Button onClick={() => {
