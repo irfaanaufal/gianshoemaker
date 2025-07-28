@@ -53,21 +53,21 @@ export default function Dashboard({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={title} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex flex-row justify-between gap-3">
-                    <div className="flex-1 flex-col gap-3 items-center py-[2rem] shadow-md rounded-xl">
+                <div className="flex flex-col lg:flex-row md:flex-row justify-between gap-3">
+                    <div className="flex-1 flex-col gap-3 items-center py-[2rem] shadow-md rounded-xl dark:border-2">
                         <h3 className="text-black dark:text-white text-2xl text-center">Total Order</h3>
                         <h2 className="text-4xl text-center">{total_order}</h2>
                     </div>
-                    <div className="flex-1 flex-col gap-3 items-center py-[2rem] shadow-md rounded-xl">
+                    <div className="flex-1 flex-col gap-3 items-center py-[2rem] shadow-md rounded-xl dark:border-2">
                         <h3 className="text-black dark:text-white text-2xl text-center">Total Order Aktif</h3>
                         <h2 className="text-4xl text-center">{active_order}</h2>
                     </div>
-                    <div className="flex-1 flex-col gap-3 items-center py-[2rem] shadow-md rounded-xl">
+                    <div className="flex-1 flex-col gap-3 items-center py-[2rem] shadow-md rounded-xl dark:border-2">
                         <h3 className="text-black dark:text-white text-2xl text-center">{user_login.roles[0].name == 'pelanggan' ? `Total Pengeluaran` : `Total Pendapatan`}</h3>
                         <h2 className="text-4xl text-center">Rp. {Intl.NumberFormat('id-ID').format(revenue)}</h2>
                     </div>
                 </div>
-                <div className="flex flex-1 flex-row justify-center items-start w-full gap-4">
+                <div className="flex flex-1 flex-col md:flex-row lg:flex-row justify-center items-start w-full gap-4">
                     <Card className="w-full">
                         <CardHeader>
                             <CardTitle>Treatment Terpopuler</CardTitle>

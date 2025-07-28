@@ -31,15 +31,15 @@ class UserSeeder extends Seeder
                 "role" => "kurir"
             ],
             (object)[
-                "name" => "Pelanggan 1",
-                "email" => "pelanggan1@gianshoemaker.id",
+                "name" => "Kurtubi",
+                "email" => "kurtubi@gianshoemaker.id",
                 "phone" => "08352873",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "pelanggan"
             ],
             (object)[
-                "name" => "Pelanggan 2",
-                "email" => "pelanggan2@gianshoemaker.id",
+                "name" => "Juliana",
+                "email" => "juliana@gianshoemaker.id",
                 "phone" => "08352834",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "pelanggan"

@@ -27,6 +27,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { ChevronsUpDown } from 'lucide-react';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -43,6 +44,7 @@ export default function PageTracking({
     title: string;
     orders: Order[]
 }) {
+    const [isOpen, setIsOpen] = useState<boolean>(false)
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
     // Google Maps API loading
@@ -93,7 +95,7 @@ export default function PageTracking({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={title} />
-            <div className="flex flex-col md:flex-row lg:flex-row-reverse gap-3 w-full p-4 max-h-[90vh]">
+            <div className="relative flex flex-col md:flex-row lg:flex-row-reverse gap-3 w-full p-4 max-h-[90vh]">
                 <div className="flex flex-col space-y-3 w-full md:w-[70%] lg:w-[70%]">
                     <HeadingSmall title="Lihat Alamat Pesaan" description="" />
                     <div className="w-full rounded-xl h-[30rem]">
@@ -147,43 +149,86 @@ export default function PageTracking({
                     :
                     <div className="flex flex-col mt-[1rem] overflow-scroll gap-3">
                         {orders.length < 1 && <p className="text-xl">Tidak ada orderan</p>}
-                        {orders.map((r: Order, idx) => {
-                            return (
-                                <Collapsible key={r?.trx} className="flex flex-col gap-3 justify-start items-start">
-                                    <CollapsibleTrigger>
-                                        <Badge className="p-3">
-                                            <h3 className="text-xl">Orderan Ke-{idx + 1}</h3>
-                                        </Badge>
-                                    </CollapsibleTrigger>
-                                    <CollapsibleContent>
-                                        <Card key={r.trx}>
-                                            <CardHeader>
-                                                <CardTitle>No : {r.trx} ({r.user ? r.user.name : r.custom_user})</CardTitle>
-                                                <CardDescription>{r.user_address ? r.user_address.address : r.custom_address}</CardDescription>
-                                                <CardAction className="flex gap-2">
+                        <Drawer direction='left'>
+                            <DrawerTrigger className="absolute top-0 right-0 -translate-x-2">
+                                <Badge className="px-[2rem] py-[1rem] bg-blue-500 hover:bg-blue-600 text-white">
+                                    Lihat Orderan
+                                </Badge>
+                            </DrawerTrigger>
+                            <DrawerContent className="px-1 overflow-y-scroll">
+                                <DrawerHeader>
+                                    <DrawerTitle>List Orderan</DrawerTitle>
+                                </DrawerHeader>
+                                {orders.map((data, idxo) => {
+                                    return (
+                                        <Collapsible
+                                            // open={isOpen}
+                                            // onOpenChange={setIsOpen}
+                                            className="flex flex-col gap-2 border-2 rounded-xl p-2 mb-2"
+                                            key={idxo}
+                                            id={data.trx}
+                                        >
+                                            <div className="flex items-center justify-between gap-4 px-4">
+                                                <h4 className="text-sm font-semibold">
+                                                    Order#{idxo + 1}
+                                                </h4>
+                                                <div className="flex flex-row items-center gap-2">
                                                     <Button onClick={() => {
-                                                        const lat = r.custom_lat ? +r.custom_lat : +r.user_address.lat;
-                                                        const lng = r.custom_long ? +r.custom_long : +r.user_address.long;
+                                                        const lat = data.custom_lat ? +data.custom_lat : +data.user_address.lat;
+                                                        const lng = data.custom_long ? +data.custom_long : +data.user_address.long;
                                                         // console.log(lat, lng);
                                                         setSelectedLocation({ lat, lng });
                                                     }} className="bg-red-500 hover:bg-red-600 rounded-full">
                                                         <i className="fa-solid fa-location-dot text-white"></i>
                                                     </Button>
-                                                    <DetailOrder order={r} />
-                                                </CardAction>
-                                            </CardHeader>
-                                            <CardContent className="w-full flex flex-row gap-3">
-                                                <span>Latitude : {r?.custom_lat ?? r?.user_address?.lat}</span>
-                                                <span>longitude : {r?.user_address?.long}</span>
-                                            </CardContent>
-                                            <CardFooter>
-                                                {buttonUpdate(r.status, r)}
-                                            </CardFooter>
-                                        </Card>
-                                    </CollapsibleContent>
-                                </Collapsible>
-                            )
-                        })}
+                                                    <CollapsibleTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className={`size-8`} id={data.trx}>
+                                                            <ChevronsUpDown />
+                                                            <span className="sr-only">Toggle</span>
+                                                        </Button>
+                                                    </CollapsibleTrigger>
+                                                </div>
+                                            </div>
+                                            {buttonUpdate(data.status, data)}
+                                            <CollapsibleContent className="flex flex-col gap-2">
+                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
+                                                    TRX : {data.trx}
+                                                </div>
+                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
+                                                    Tanggal Order : {data.created_at.toString().substring(0, 10)}
+                                                </div>
+                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
+                                                    Atas Nama : {data.user ? data.user.name : data.custom_user}
+                                                </div>
+                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
+                                                    Jenis Pelayanan : {data.service_method.toUpperCase()}
+                                                </div>
+                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
+                                                    Diantar Ke : <br /> {data.user_address ? data.user_address.address : data.custom_address}
+                                                </div>
+                                                <a href={`https://www.google.com/maps?q=${data.user_address ? data.user_address.lat : data.custom_lat},${data.user_address ? data.user_address.long : data.custom_long}`} target="_blank">
+                                                    <Badge className="rounded-md border px-4 py-2 font-mono text-sm w-fit" role='button'>
+                                                        Lihat Lokasi
+                                                    </Badge>
+                                                </a>
+                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
+                                                    Status Order : {data.status.toUpperCase()}
+                                                </div>
+                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
+                                                    Status Pembayaran : {data.payment_status.toUpperCase() == "PAID" ? "LUNAS" : "BELUM DIBAYAR"}
+                                                </div>
+                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
+                                                    Nomor Telepon : {data.user ? data.user.phone : data.custom_phone}
+                                                </div>
+                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
+                                                    Email : {data.user ? data.user.email : "tidak ada"}
+                                                </div>
+                                            </CollapsibleContent>
+                                        </Collapsible>
+                                    )
+                                })}
+                            </DrawerContent>
+                        </Drawer>
                     </div>
                 }
             </div>
