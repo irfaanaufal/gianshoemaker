@@ -19,27 +19,25 @@ class DashboardController extends Controller
         $query = Order::with(['order_details', 'user', 'user_address']);
 
         $user = Auth::user();
-
+        $userId = $user->id;
         $role = $user->getRoleNames();
 
-        if ($role[0] == "pelanggan") {
-            $query->where('user_id', Auth::id());
+        if ($role[0] === "pelanggan") {
+            $query->where('user_id', $userId);
         }
 
         $orders = Collection::make($query->get());
 
         $total_order = $orders->count();
-
         $active_order = $orders->where('status', '!=', 'selesai')->count();
+        $revenue = $orders->sum('grand_total'); // Akan ditampilkan sebagai "Total pengeluaran" di frontend
 
-        $revenue = $orders->sum('grand_total');
-
-        // ✅ Ambil treatment paling banyak dipilih dari order_details
+        // ✅ Top 5 treatment berdasarkan frekuensi
         $topTreatments = DB::table('order_details')
             ->select('treatment_id', DB::raw('COUNT(*) as count'))
             ->groupBy('treatment_id')
             ->orderByDesc('count')
-            ->limit(5) // Ambil 5 teratas
+            ->limit(5)
             ->get()
             ->map(function ($item) {
                 $treatment = Treatment::find($item->treatment_id);
@@ -49,15 +47,20 @@ class DashboardController extends Controller
                 ];
             });
 
-        // ✅ Total order bulanan (paid) dari Januari - Desember
-        $monthlyOrders = DB::table('orders')
+        // ✅ Monthly orders (hanya yang paid dan sesuai user jika pelanggan)
+        $monthlyOrdersQuery = DB::table('orders')
             ->selectRaw('MONTH(created_at) as month, COUNT(*) as count')
             ->where('payment_status', 'paid')
-            ->whereYear('created_at', Carbon::now()->year)
+            ->whereYear('created_at', Carbon::now()->year);
+
+        if ($role[0] === "pelanggan") {
+            $monthlyOrdersQuery->where('user_id', $userId);
+        }
+
+        $monthlyOrders = $monthlyOrdersQuery
             ->groupBy(DB::raw('MONTH(created_at)'))
             ->pluck('count', 'month');
 
-        // Normalisasi agar semua bulan 1–12 terisi (jika kosong = 0)
         $monthlyOrdersComplete = collect(range(1, 12))->map(function ($month) use ($monthlyOrders) {
             return [
                 'month' => Carbon::create()->month($month)->format('F'),
@@ -65,15 +68,20 @@ class DashboardController extends Controller
             ];
         });
 
-        // ✅ Total pendapatan bulanan dari order yang 'paid'
-        $monthlyRevenue = DB::table('orders')
+        // ✅ Monthly revenue (pendapatan atau pengeluaran tergantung role)
+        $monthlyRevenueQuery = DB::table('orders')
             ->selectRaw('MONTH(created_at) as month, SUM(grand_total) as revenue')
             ->where('payment_status', 'paid')
-            ->whereYear('created_at', Carbon::now()->year)
+            ->whereYear('created_at', Carbon::now()->year);
+
+        if ($role[0] === "pelanggan") {
+            $monthlyRevenueQuery->where('user_id', $userId);
+        }
+
+        $monthlyRevenue = $monthlyRevenueQuery
             ->groupBy(DB::raw('MONTH(created_at)'))
             ->pluck('revenue', 'month');
 
-        // Lengkapi semua bulan 1–12 agar tidak kosong
         $monthlyRevenueComplete = collect(range(1, 12))->map(function ($month) use ($monthlyRevenue) {
             return [
                 'month' => Carbon::create()->month($month)->format('F'),
@@ -85,7 +93,7 @@ class DashboardController extends Controller
             "title" => "Dashboard",
             "total_order" => $total_order,
             "active_order" => $active_order,
-            "revenue" => $revenue,
+            "revenue" => $revenue, // → tampilkan sebagai "Total Pengeluaran" jika pelanggan
             "top_treatments" => $topTreatments,
             "monthly_orders" => $monthlyOrdersComplete,
             "monthly_revenue" => $monthlyRevenueComplete,

@@ -24,9 +24,16 @@ class UserSeeder extends Seeder
                 "role" => "admin"
             ],
             (object)[
-                "name" => "Kurir Gianshoemaker",
-                "email" => "kurir@gianshoemaker.id",
+                "name" => "Kurir Ciko",
+                "email" => "kurir1@gianshoemaker.id",
                 "phone" => "0823208374",
+                "avatar" => "/profiles/default-avatar.jpg",
+                "role" => "kurir"
+            ],
+            (object)[
+                "name" => "Kurir Aldrian",
+                "email" => "kurir2@gianshoemaker.id",
+                "phone" => "0823208333",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "kurir"
             ],

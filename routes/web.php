@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function() {
     Route::get('/order/placement', [OrderController::class, 'index'])->name('order.placement');
     Route::post('/order/placement', [MidtransController::class, 'create_order'])->name('order.placement.store');
     Route::post('/order/callback', [OrderController::class, 'callback'])->name('order.callback');
+    Route::post('/order/take/{order}', [TrackingController::class, 'take_order'])->name('order.take');
 
     // Dynamic Route
     Route::resource('user', UserController::class)->except('index');

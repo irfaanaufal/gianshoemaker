@@ -90,6 +90,7 @@ export interface Order {
     id: number;
     trx: string;
     user_id: number;
+    courier_id?: number;
     user: User;
     user_address_id: number;
     user_address: UserAddress;
@@ -104,6 +105,9 @@ export interface Order {
     distance_km: number;
     delivery_fee: number;
     order_details: OrderDetail[];
+    courier?: User;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface OrderDetail {

@@ -30,6 +30,7 @@ class Order extends Model
         'delivery_fee',
         'service_method',
         'grand_total',
+        'courier_id'
     ];
 
     public function order_details(): HasMany
@@ -45,5 +46,10 @@ class Order extends Model
     public function user_address(): BelongsTo
     {
         return $this->belongsTo(UserAddress::class);
+    }
+
+    public function courier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'courier_id');
     }
 }

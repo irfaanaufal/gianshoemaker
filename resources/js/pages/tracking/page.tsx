@@ -44,7 +44,6 @@ export default function PageTracking({
     title: string;
     orders: Order[]
 }) {
-    const [isOpen, setIsOpen] = useState<boolean>(false)
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
     // Google Maps API loading
@@ -88,6 +87,22 @@ export default function PageTracking({
         }
         return status == 'selesai' ? <></> :
             <Button className="bg-yellow-500 hover:bg-yellow-600 rounded-full" onClick={() => handleClick(nextStatus, row)}>UPDATE {nextStatus.toUpperCase()}</Button>
+    }
+
+    const takeOrder = async (order: Order) => {
+        try {
+            const response = await api.post(route('order.take', { order: order.id }));
+            if (response.status === 201) {
+                toast(response.data.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                throw response.data;
+            }
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     if (!isLoaded) return <div>Loading...</div>;
@@ -139,7 +154,11 @@ export default function PageTracking({
                                         <span>longitude : {r?.user_address?.long}</span>
                                     </CardContent>
                                     <CardFooter>
-                                        {buttonUpdate(r.status, r)}
+                                        {r?.courier_id &&
+                                            buttonUpdate(r.status, r)}
+                                        {!r.courier_id &&
+                                            <Button className="bg-green-500 hover:bg-green-600 rounded-full" onClick={() => takeOrder(r)}>Ambil Orderan</Button>
+                                        }
                                     </CardFooter>
                                 </Card>
                             )
@@ -189,13 +208,17 @@ export default function PageTracking({
                                                     </CollapsibleTrigger>
                                                 </div>
                                             </div>
-                                            {buttonUpdate(data.status, data)}
+                                            {data?.courier_id &&
+                                                buttonUpdate(data.status, data)}
+                                            {!data.courier_id &&
+                                                <Button className="bg-green-500 hover:bg-green-600 rounded-full" onClick={() => takeOrder(data)}>Ambil Orderan</Button>
+                                            }
                                             <CollapsibleContent className="flex flex-col gap-2">
                                                 <div className="rounded-md border px-4 py-2 font-mono text-sm">
                                                     TRX : {data.trx}
                                                 </div>
                                                 <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    Tanggal Order : {data.created_at.toString().substring(0, 10)}
+                                                    Tanggal Order : {data?.created_at?.toString().substring(0, 10)}
                                                 </div>
                                                 <div className="rounded-md border px-4 py-2 font-mono text-sm">
                                                     Atas Nama : {data.user ? data.user.name : data.custom_user}
@@ -241,7 +264,6 @@ const DetailOrder = ({
 }: {
     order: Order
 }) => {
-    console.log(order);
     return (
         <Drawer direction="right">
             <DrawerTrigger>
@@ -250,7 +272,7 @@ const DetailOrder = ({
             <DrawerContent>
                 <DrawerHeader>
                     <DrawerTitle>Order ID#{order.trx}</DrawerTitle>
-                    <DrawerDescription>Tanggal Order : {order.created_at}</DrawerDescription>
+                    <DrawerDescription>Tanggal Order : {order?.created_at?.toString().substring(0, 10)}</DrawerDescription>
                 </DrawerHeader>
                 <div className="flex flex-col space-y-2 px-4 mb-[1rem]">
                     <Label className="text-md">Atas Nama :</Label>

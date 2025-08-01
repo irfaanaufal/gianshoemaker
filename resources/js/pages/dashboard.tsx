@@ -114,7 +114,7 @@ export default function Dashboard({
                 <div className="flex flex-1 flex-row justify-center items-start w-full gap-4">
                     <Card className="w-full">
                         <CardHeader>
-                            <CardTitle>Pendapatan Bulanan (Rp)</CardTitle>
+                            <CardTitle>{user_login.roles[0].name == 'pelanggan' ? `Total Pengeluaran Bulanan (Rp)` : `Total Pendapatan Bulanan (Rp)`}</CardTitle>
                         </CardHeader>
                         <CardContent className="h-72">
                             <ResponsiveContainer width="100%" height="100%">
