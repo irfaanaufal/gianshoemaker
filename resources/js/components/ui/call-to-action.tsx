@@ -1,7 +1,5 @@
-import { MoveRight, PhoneCall } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "@inertiajs/react";
 
 function CTA() {
     return (

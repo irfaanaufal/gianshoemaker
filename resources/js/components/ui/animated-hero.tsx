@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { MoveRight, PhoneCall } from "lucide-react";
+import { MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@inertiajs/react";
 
@@ -28,7 +27,7 @@ function Hero() {
         <div className="flex gap-8 py-20 lg:py-40 items-center justify-center flex-col">
           <div className="flex gap-4 flex-col">
             <h1 className="text-5xl md:text-7xl max-w-2xl tracking-tighter text-center font-regular">
-              <span className="text-spektr-cyan-50 dark:text-white">Solusi Terpercaya Perawatan Sepatu Kesanganan Kamu.</span>
+              <span className="text-spektr-cyan-50 dark:text-white">Solusi Terpercaya Perawatan Sepatu Kesayanan Kamu.</span>
             </h1>
             <p className="text-lg md:text-xl leading-relaxed tracking-tight text-muted-foreground max-w-2xl text-center dark:text-white">
               Dengan teknik khusus dan bahan berkualitas, kami menghadirkan layanan terbaik untuk menjaga kebersihan dan keawetan barang kesayanganmu.

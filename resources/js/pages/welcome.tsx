@@ -1,5 +1,5 @@
-import { Treatment, type SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Treatment } from '@/types';
+import { Head, Link } from '@inertiajs/react';
 import { Hero } from '@/components/ui/animated-hero';
 import { TreatmentCard } from '@/components/ui/treatment-card';
 import { api } from '@/lib/utils';
@@ -89,7 +89,7 @@ export default function Welcome() {
                 </section>
 
             </div>
-            <div className="flex sticky bottom-10 right-10 float-end w-[7rem] h-[7rem] bg-green-400 rounded-full justify-center items-center">
+            <div className="flex sticky bottom-10 right-10 float-end w-[4rem] h-[4rem] bg-green-400 rounded-full justify-center items-center">
                 <Link href={`https://wa.me/6287831633858`}>
                     <i className="fa-brands fa-whatsapp text-7xl"></i>
                 </Link>

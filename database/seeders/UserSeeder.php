@@ -18,36 +18,36 @@ class UserSeeder extends Seeder
         $users = [
             (object)[
                 "name" => "Admin Gianshoemaker",
-                "email" => "admin@gianshoemaker.id",
-                "phone" => "08585858585",
+                "email" => "admin@gmail.com",
+                "phone" => "081916367301",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "admin"
             ],
             (object)[
                 "name" => "Kurir Ciko",
-                "email" => "kurir1@gianshoemaker.id",
-                "phone" => "0823208374",
+                "email" => "ciko@gmail.com",
+                "phone" => "081916367302",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "kurir"
             ],
             (object)[
-                "name" => "Kurir Aldrian",
-                "email" => "kurir2@gianshoemaker.id",
-                "phone" => "0823208333",
+                "name" => "Kurir Peter",
+                "email" => "peter@gmail.com",
+                "phone" => "081916367303",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "kurir"
             ],
             (object)[
-                "name" => "Kurtubi",
-                "email" => "kurtubi@gianshoemaker.id",
-                "phone" => "08352873",
+                "name" => "Irfaan",
+                "email" => "irfaan@gmail.com",
+                "phone" => "081916367304",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "pelanggan"
             ],
             (object)[
-                "name" => "Juliana",
-                "email" => "juliana@gianshoemaker.id",
-                "phone" => "08352834",
+                "name" => "Naufal",
+                "email" => "naufal@gmail.com",
+                "phone" => "081916367305",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "pelanggan"
             ],
