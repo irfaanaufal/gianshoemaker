@@ -46,6 +46,7 @@ export default function PageTracking({
 }) {
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+
     // Google Maps API loading
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, // API key from env
@@ -69,7 +70,7 @@ export default function PageTracking({
         } catch (error) {
             console.log(`Error : `, error);
         }
-    }
+    };
 
     const buttonUpdate = (status: string, row: Order): ReactNode | undefined => {
         let nextStatus: string = "";
@@ -87,7 +88,7 @@ export default function PageTracking({
         }
         return status == 'selesai' ? <></> :
             <Button className="bg-yellow-500 hover:bg-yellow-600 rounded-full" onClick={() => handleClick(nextStatus, row)}>UPDATE {nextStatus.toUpperCase()}</Button>
-    }
+    };
 
     const takeOrder = async (order: Order) => {
         try {
@@ -103,7 +104,7 @@ export default function PageTracking({
         } catch (error) {
             console.log(error);
         }
-    }
+    };
 
     if (!isLoaded) return <div>Loading...</div>;
 
@@ -118,6 +119,17 @@ export default function PageTracking({
                             mapContainerStyle={{ width: "100%", height: "100%", borderRadius: "1rem" }}
                             center={selectedLocation || { lat: -6.200000, lng: 106.816666 }}
                             zoom={15}>
+                            {orders.map((order: Order) => {
+                                const lat = order.custom_lat ? +order.custom_lat : +order.user_address.lat;
+                                const lng = order.custom_long ? +order.custom_long : +order.user_address.long;
+                                return (
+                                    <Marker
+                                        key={order.trx}
+                                        position={{ lat, lng }}
+                                        onClick={() => handleMarkerClick({ lat, lng })}
+                                    />
+                                );
+                            })}
                             {selectedLocation &&
                                 <Marker
                                     position={selectedLocation}
@@ -141,7 +153,6 @@ export default function PageTracking({
                                             <Button onClick={() => {
                                                 const lat = r.custom_lat ? +r.custom_lat : +r.user_address.lat;
                                                 const lng = r.custom_long ? +r.custom_long : +r.user_address.long;
-                                                // console.log(lat, lng);
                                                 setSelectedLocation({ lat, lng });
                                             }} className="bg-red-500 hover:bg-red-600 rounded-full">
                                                 <i className="fa-solid fa-location-dot text-white"></i>
@@ -161,11 +172,9 @@ export default function PageTracking({
                                         }
                                     </CardFooter>
                                 </Card>
-                            )
-                        }
-                        )}
-                    </div>
-                    :
+                            );
+                        })}
+                    </div> :
                     <div className="flex flex-col mt-[1rem] overflow-scroll gap-3">
                         {orders.length < 1 && <p className="text-xl">Tidak ada orderan</p>}
                         <Drawer direction='left'>
@@ -180,13 +189,7 @@ export default function PageTracking({
                                 </DrawerHeader>
                                 {orders.map((data, idxo) => {
                                     return (
-                                        <Collapsible
-                                            // open={isOpen}
-                                            // onOpenChange={setIsOpen}
-                                            className="flex flex-col gap-2 border-2 rounded-xl p-2 mb-2"
-                                            key={idxo}
-                                            id={data.trx}
-                                        >
+                                        <Collapsible key={idxo} className="flex flex-col gap-2 border-2 rounded-xl p-2 mb-2">
                                             <div className="flex items-center justify-between gap-4 px-4">
                                                 <h4 className="text-sm font-semibold">
                                                     {data.user ? data.user.name : data.custom_user} | Order#{idxo + 1}
@@ -195,60 +198,16 @@ export default function PageTracking({
                                                     <Button onClick={() => {
                                                         const lat = data.custom_lat ? +data.custom_lat : +data.user_address.lat;
                                                         const lng = data.custom_long ? +data.custom_long : +data.user_address.long;
-                                                        // console.log(lat, lng);
                                                         setSelectedLocation({ lat, lng });
                                                     }} className="bg-red-500 hover:bg-red-600 rounded-full">
                                                         <i className="fa-solid fa-location-dot text-white"></i>
                                                     </Button>
-                                                    <CollapsibleTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className={`size-8`} id={data.trx}>
-                                                            <ChevronsUpDown />
-                                                            <span className="sr-only">Toggle</span>
-                                                        </Button>
-                                                    </CollapsibleTrigger>
                                                 </div>
                                             </div>
-                                            {data?.courier_id &&
-                                                buttonUpdate(data.status, data)}
-                                            {!data.courier_id &&
-                                                <Button className="bg-green-500 hover:bg-green-600 rounded-full" onClick={() => takeOrder(data)}>Ambil Orderan</Button>
-                                            }
-                                            <CollapsibleContent className="flex flex-col gap-2">
-                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    TRX : {data.trx}
-                                                </div>
-                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    Tanggal Order : {data?.created_at?.toString().substring(0, 10)}
-                                                </div>
-                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    Atas Nama : {data.user ? data.user.name : data.custom_user}
-                                                </div>
-                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    Jenis Pelayanan : {data.service_method.toUpperCase()}
-                                                </div>
-                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    Diantar Ke : <br /> {data.user_address ? data.user_address.address : data.custom_address}
-                                                </div>
-                                                <a href={`https://www.google.com/maps?q=${data.user_address ? data.user_address.lat : data.custom_lat},${data.user_address ? data.user_address.long : data.custom_long}`} target="_blank">
-                                                    <Badge className="rounded-md border px-4 py-2 font-mono text-sm w-fit" role='button'>
-                                                        Lihat Lokasi
-                                                    </Badge>
-                                                </a>
-                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    Status Order : {data.status.toUpperCase()}
-                                                </div>
-                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    Status Pembayaran : {data.payment_status.toUpperCase() == "PAID" ? "LUNAS" : "BELUM DIBAYAR"}
-                                                </div>
-                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    Nomor Telepon : {data.user ? data.user.phone : data.custom_phone}
-                                                </div>
-                                                <div className="rounded-md border px-4 py-2 font-mono text-sm">
-                                                    Email : {data.user ? data.user.email : "tidak ada"}
-                                                </div>
-                                            </CollapsibleContent>
+                                            {data?.courier_id && buttonUpdate(data.status, data)}
+                                            {!data.courier_id && <Button className="bg-green-500 hover:bg-green-600 rounded-full" onClick={() => takeOrder(data)}>Ambil Orderan</Button>}
                                         </Collapsible>
-                                    )
+                                    );
                                 })}
                             </DrawerContent>
                         </Drawer>
@@ -256,8 +215,9 @@ export default function PageTracking({
                 }
             </div>
         </AppLayout>
-    )
+    );
 }
+
 
 const DetailOrder = ({
     order
