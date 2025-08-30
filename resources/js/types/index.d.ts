@@ -104,6 +104,7 @@ export interface Order {
     service_method: 'antar jemput' | 'antar' | 'pickup';
     distance_km: number;
     delivery_fee: number;
+    grand_total: number;
     order_details: OrderDetail[];
     courier?: User;
     created_at?: string;

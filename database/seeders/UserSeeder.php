@@ -18,7 +18,8 @@ class UserSeeder extends Seeder
         $users = [
             (object)[
                 "name" => "Admin Gianshoemaker",
-                "email" => "admin@gmail.com",
+                "email" => "gianhendarpan13@gmail.com",
+                "email_verified_at" => now(),
                 "phone" => "081916367301",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "admin"
@@ -26,6 +27,7 @@ class UserSeeder extends Seeder
             (object)[
                 "name" => "Kurir Ciko",
                 "email" => "ciko@gmail.com",
+                "email_verified_at" => now(),
                 "phone" => "081916367302",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "kurir"
@@ -33,6 +35,7 @@ class UserSeeder extends Seeder
             (object)[
                 "name" => "Kurir Peter",
                 "email" => "peter@gmail.com",
+                "email_verified_at" => now(),
                 "phone" => "081916367303",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "kurir"
@@ -40,6 +43,7 @@ class UserSeeder extends Seeder
             (object)[
                 "name" => "Irfaan",
                 "email" => "irfaan@gmail.com",
+                "email_verified_at" => now(),
                 "phone" => "081916367304",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "pelanggan"
@@ -47,6 +51,7 @@ class UserSeeder extends Seeder
             (object)[
                 "name" => "Naufal",
                 "email" => "naufal@gmail.com",
+                "email_verified_at" => now(),
                 "phone" => "081916367305",
                 "avatar" => "/profiles/default-avatar.jpg",
                 "role" => "pelanggan"
@@ -61,6 +66,7 @@ class UserSeeder extends Seeder
             $new_user = User::create([
                 "name" => $user->name,
                 "email" => $user->email,
+                "email_verified_at" => $user->email_verified_at ?? null,
                 "phone" => $user->phone,
                 "password" => Hash::make("password"),
                 "avatar" => $user->avatar,

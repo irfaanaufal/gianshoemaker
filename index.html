@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <title>Demo Multi-Route Laundry → Google Maps</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          sans-serif;
+        margin: 24px;
+        line-height: 1.4;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      select,
+      button,
+      input[type="number"],
+      input[type="text"] {
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+      button {
+        cursor: pointer;
+      }
+      .links a {
+        display: block;
+        margin: 8px 0;
+        word-break: break-all;
+      }
+      code {
+        background: #f6f8fa;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Demo: Buka Rute Multi-Tujuan ke Google Maps</h1>
+
+    <!-- Lokasi asal (laundry) -->
+    <div class="row">
+      <strong>Asal (Laundry):</strong>
+      <label>Lat <input id="latOrigin" type="text" value="-6.2088" /></label>
+      <label>Lng <input id="lngOrigin" type="text" value="106.8456" /></label>
+    </div>
+
+    <!-- Batas waypoint & mode -->
+    <div class="row">
+      <strong>Batas waypoint:</strong>
+      <label
+        ><input type="radio" name="limit" value="3" /> Mobile (≤ 3 waypoint /
+        rute)</label
+      >
+      <label
+        ><input type="radio" name="limit" value="9" checked /> Desktop (≤ 9
+        waypoint / rute)</label
+      >
+    </div>
+    <div class="row">
+      <label
+        >Mode perjalanan
+        <select id="mode">
+          <option value="driving">driving</option>
+          <option value="walking">walking</option>
+          <option value="bicycling">bicycling</option>
+          <option value="transit">transit</option>
+        </select>
+      </label>
+      <button id="btnOpen">Buka Rute</button>
+      <button id="btnCopy">Copy Semua URL</button>
+    </div>
+
+    <p>
+      <small>
+        Catatan: <code>waypoints</code> adalah pemberhentian di antara asal &
+        tujuan akhir. Jika total tujuan melebihi batas, skrip akan membagi jadi
+        beberapa rute.
+      </small>
+    </p>
+
+    <h3>Tujuan (dummy):</h3>
+    <pre
+      id="dummyPreview"
+      style="
+        background: #f6f8fa;
+        padding: 12px;
+        border-radius: 8px;
+        overflow: auto;
+      "
+    ></pre>
+
+    <h3>Link Rute Dihasilkan:</h3>
+    <div class="links" id="links"></div>
+
+    <script>
+      // ====== DATA DUMMY ======
+      // Asal default: sekitar Monas (Jakarta)
+      const defaultOrigin = { lat: -6.2088, lng: 106.8456 };
+
+      // Beberapa titik tujuan sekitar Jakarta (dummy)
+      const deliveries = [
+        { name: "Pelanggan 1", lat: -6.2019, lng: 106.832 },
+        { name: "Pelanggan 2", lat: -6.2146, lng: 106.8451 },
+        { name: "Pelanggan 3", lat: -6.2203, lng: 106.8523 },
+        { name: "Pelanggan 4", lat: -6.2308, lng: 106.8457 },
+        { name: "Pelanggan 5", lat: -6.224, lng: 106.8286 },
+        { name: "Pelanggan 6", lat: -6.2105, lng: 106.8277 },
+        { name: "Pelanggan 7", lat: -6.1997, lng: 106.8521 },
+        { name: "Pelanggan 8", lat: -6.1906, lng: 106.827 },
+        { name: "Pelanggan 9", lat: -6.2163, lng: 106.865 },
+        { name: "Pelanggan 10", lat: -6.2328, lng: 106.8605 },
+        { name: "Pelanggan 11", lat: -6.2401, lng: 106.8468 },
+        { name: "Pelanggan 12", lat: -6.2461, lng: 106.8355 },
+      ];
+
+      // Tampilkan preview dummy
+      const dummyPreview = document.getElementById("dummyPreview");
+      dummyPreview.textContent = JSON.stringify(
+        { origin: defaultOrigin, deliveries },
+        null,
+        2
+      );
+
+      // ====== UTIL ======
+      function parseLatLng(latStr, lngStr) {
+        const lat = Number(String(latStr).trim());
+        const lng = Number(String(lngStr).trim());
+        if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+        return null;
+      }
+
+      // Potong array "stops" menjadi beberapa chunk berukuran (waypointLimit + 1) stops,
+      // karena 1 stop terakhir dipakai sebagai 'destination' dan sisanya jadi 'waypoints'.
+      function chunkStops(stops, waypointLimit) {
+        const chunkSize = Math.max(1, Number(waypointLimit)) + 1; // +1 untuk destination
+        const chunks = [];
+        for (let i = 0; i < stops.length; i += chunkSize) {
+          chunks.push(stops.slice(i, i + chunkSize));
+        }
+        return chunks;
+      }
+
+      function buildMapsDirUrl(origin, chunk, travelmode = "driving") {
+        const base = "https://www.google.com/maps/dir/?api=1";
+        // Jika hanya 1 stop pada chunk, jadikan dia destination, tanpa waypoints
+        const destination = chunk[chunk.length - 1];
+        const waypoints = chunk.slice(0, -1);
+
+        const qs = new URLSearchParams({
+          origin: `${origin.lat},${origin.lng}`,
+          destination: `${destination.lat},${destination.lng}`,
+          travelmode,
+        });
+
+        if (waypoints.length) {
+          // join dengan '|'
+          const wps = waypoints.map((p) => `${p.lat},${p.lng}`).join("|");
+          qs.set("waypoints", wps);
+        }
+        return `${base}&${qs.toString()}`;
+      }
+
+      function clearLinks() {
+        document.getElementById("links").innerHTML = "";
+      }
+
+      function renderLinks(urls) {
+        const wrap = document.getElementById("links");
+        wrap.innerHTML = "";
+        if (urls.length === 0) {
+          wrap.textContent = "Tidak ada URL rute dihasilkan.";
+          return;
+        }
+        urls.forEach((u, idx) => {
+          const a = document.createElement("a");
+          a.href = u;
+          a.target = "_blank";
+          a.rel = "noreferrer";
+          a.textContent = `Rute ${idx + 1}: ${u}`;
+          wrap.appendChild(a);
+        });
+      }
+
+      function getWaypointLimit() {
+        const picked = document.querySelector('input[name="limit"]:checked');
+        return Number(picked?.value || 9);
+      }
+
+      // ====== ACTIONS ======
+      document.getElementById("btnOpen").addEventListener("click", () => {
+        clearLinks();
+
+        // Origin (laundry) dari input
+        const origin =
+          parseLatLng(
+            document.getElementById("latOrigin").value,
+            document.getElementById("lngOrigin").value
+          ) || defaultOrigin;
+
+        const travelmode = document.getElementById("mode").value;
+        const waypointLimit = getWaypointLimit();
+
+        // Bagi tujuan sesuai batas waypoint per rute
+        const chunks = chunkStops(deliveries, waypointLimit);
+
+        // Bentuk URL untuk tiap chunk
+        const urls = chunks.map((chunk) =>
+          buildMapsDirUrl(origin, chunk, travelmode)
+        );
+
+        // Tampilkan link-list
+        renderLinks(urls);
+
+        // Coba buka rute pertama. (Popup blocker bisa menolak multi-open.)
+        if (urls.length > 0) {
+          window.open(urls[0], "_blank");
+        }
+      });
+
+      document.getElementById("btnCopy").addEventListener("click", async () => {
+        const links = Array.from(document.querySelectorAll("#links a")).map(
+          (a) => a.href
+        );
+        if (links.length === 0) {
+          alert('Belum ada URL rute. Klik "Buka Rute" dulu.');
+          return;
+        }
+        const text = links.join("\n");
+        try {
+          await navigator.clipboard.writeText(text);
+          alert("Semua URL rute sudah di-copy ke clipboard.");
+        } catch (e) {
+          // fallback
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          alert("Semua URL rute di-copy (fallback).");
+        }
+      });
+    </script>
+  </body>
+</html>
